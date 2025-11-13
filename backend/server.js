@@ -1,0 +1,134 @@
+import express from "express";
+import session from "express-session";
+import flash from "connect-flash";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import sequelize from "./lib/db.js"; // Sequelize connection
+import authRoutes from "./routes/auth.route.js"; // only auth route
+import videoRoutes from "./routes/video.route.js";
+import manageUserRoutes from "./routes/admin.manageuser.route.js";
+import speciesRoutes from "./routes/species.route.js";
+import speciesPublicRoutes from "./routes/species.public.route.js";
+import cors from "cors";
+import swaggerUi from "swagger-ui-express";
+import swaggerJsdoc from "swagger-jsdoc";
+
+dotenv.config();
+
+// Create express app
+const app = express();
+
+app.use(express.json({ limit: "10mb" }));
+app.use(cookieParser());
+
+//cors error fix
+app.use(
+  cors({
+    origin: "http://localhost:8080",
+    credentials: true,
+  })
+);
+
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Aqua Guide API",
+      version: "1.0.0",
+      description: "API documentation for Aqua Guide backend",
+      contact: {
+        name: "Aqua Guide Team",
+        email: "support@aquaguide.com",
+      },
+    },
+    servers: [
+      {
+        url: "http://localhost:5000",
+        description: "Development server",
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+      schemas: {
+        User: {
+          type: "object",
+          properties: {
+            id: { type: "integer", example: 1 },
+            name: { type: "string", example: "John Doe" },
+            email: { type: "string", example: "john@example.com" },
+            role: { type: "string", example: "user" },
+            dob: { type: "string", example: "1995-08-25" },
+            gender: { type: "string", example: "male" },
+          },
+        },
+        SignupRequest: {
+          type: "object",
+          required: ["name", "email", "password"],
+          properties: {
+            name: { type: "string", example: "John Doe" },
+            userid: { type: "string", example: "john_doe" },
+            email: { type: "string", example: "john@example.com" },
+            password: { type: "string", example: "12345678" },
+            dob: { type: "string", example: "1990-05-15" },
+            gender: { type: "string", example: "male" },
+            role: { type: "string", example: "user" },
+          },
+        },
+        LoginRequest: {
+          type: "object",
+          required: ["email", "password"],
+          properties: {
+            email: { type: "string", example: "john@example.com" },
+            password: { type: "string", example: "12345678" },
+          },
+        },
+      },
+    },
+  },
+  apis: ["./routes/*.js"],
+};
+
+const swaggerSpecs = swaggerJsdoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+
+app.use("/api/auth", authRoutes);
+app.use("/api/videos", videoRoutes);
+app.use("/api/manage_users", manageUserRoutes);
+app.use("/api/manage_species", speciesRoutes);
+app.use("/api", speciesPublicRoutes);
+
+app.get("/", (req, res) => {
+  res.send(
+    'Welcome to Aqua Guide API — visit <a href="/api-docs">/api-docs</a> for documentation'
+  );
+});
+
+const PORT = process.env.PORT || 5000;
+
+const startServer = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log("✅ PostgreSQL connected");
+
+    await sequelize.sync({ alter: true });
+    console.log("✅ Models synced with database");
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running at http://localhost:${PORT}`);
+      console.log(
+        `📘 Swagger docs available at http://localhost:${PORT}/api-docs`
+      );
+    });
+  } catch (error) {
+    console.error("❌ Database connection failed:", error.message);
+    process.exit(1);
+  }
+};
+
+startServer();
