@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -113,6 +113,8 @@ const species = [
 const SpeciesDictionary = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {}, []);
 
   const filteredSpecies = species.filter((fish) => {
     const matchesCategory =
