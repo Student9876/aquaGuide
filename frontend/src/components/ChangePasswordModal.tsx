@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Lock } from "lucide-react";
 import { toast } from "sonner";
+import { authApi } from "@/api/modules/auth";
 
 interface ChangePasswordModalProps {
   open: boolean;
@@ -42,15 +43,32 @@ const ChangePasswordModal = ({
     }
 
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+
+    try {
+      // ✅ WAIT for API call
+      await authApi.updatePassword({
+        currentPassword,
+        newPassword,
+      });
+
       toast.success("Password changed successfully");
+
       onOpenChange(false);
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    }, 1000);
+    } catch (error: any) {
+      // ✅ CATCH 400 errors properly
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to update password";
+
+      toast.error(message); // ✅ show error
+      // ❌ do NOT close modal on error
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

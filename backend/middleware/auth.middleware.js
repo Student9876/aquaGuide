@@ -1,39 +1,55 @@
 import jwt from "jsonwebtoken";
-import User from "../models/user.model.js"; 
+import User from "../models/user.model.js";
 
 export const protectRoute = async (req, res, next) => {
   try {
-    const accessToken = req.cookies.accessToken;
+    // ✅ Get token from Authorization header
+    const authHeader = req.headers.authorization;
 
-    if (!accessToken) {
-      return res.status(401).json({ message: "Unauthorized - No access token provided" });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        message: "Unauthorized - No token provided",
+      });
     }
 
+    const accessToken = authHeader.split(" ")[1];
+
     try {
-      // Decode and verify JWT
+      // ✅ Verify JWT
       const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
 
-      // Find user by ID (Sequelize)
+      // ✅ Fetch user from DB (exclude password)
       const user = await User.findByPk(decoded.userId, {
         attributes: { exclude: ["password"] },
       });
 
       if (!user) {
-        return res.status(401).json({ message: "User not found" });
+        return res.status(401).json({
+          message: "Unauthorized - User not found",
+        });
       }
 
-      // Attach user object to request
+      // ✅ Attach user to request
       req.user = user;
+
       next();
     } catch (error) {
       if (error.name === "TokenExpiredError") {
-        return res.status(401).json({ message: "Unauthorized - Access token expired" });
+        return res.status(401).json({
+          message: "Unauthorized - Token expired",
+        });
       }
-      throw error;
+
+      return res.status(401).json({
+        message: "Unauthorized - Invalid token",
+      });
     }
   } catch (error) {
     console.error("Error in protectRoute middleware:", error.message);
-    return res.status(401).json({ message: "Unauthorized - Invalid access token" });
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 };
 
@@ -49,17 +65,21 @@ export const adminRoute = (req, res, next) => {
 };
 
 export const supportOrAdminRoute = (req, res, next) => {
-    // The original code allowed either 'admin' OR 'support' to unlock a user.
-    if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'support')) {
-        return res.status(403).json({ message: "Admin or Support privileges required." });
-    }
-    next();
+  // The original code allowed either 'admin' OR 'support' to unlock a user.
+  if (!req.user || (req.user.role !== "admin" && req.user.role !== "support")) {
+    return res
+      .status(403)
+      .json({ message: "Admin or Support privileges required." });
+  }
+  next();
 };
 
 export const supportOnlyRoute = (req, res, next) => {
-    // The original code allowed either 'admin' OR 'support' to unlock a user.
-    if (!req.user || (req.user.role !== 'support')) {
-        return res.status(403).json({ message: "Admin or Support privileges required." });
-    }
-    next();
+  // The original code allowed either 'admin' OR 'support' to unlock a user.
+  if (!req.user || req.user.role !== "support") {
+    return res
+      .status(403)
+      .json({ message: "Admin or Support privileges required." });
+  }
+  next();
 };

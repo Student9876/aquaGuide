@@ -2,6 +2,7 @@ import express from "express";
 import {
   getProfile,
   getProfile2,
+  getUserDetails,
   login,
   logout,
   refreshToken,
@@ -184,5 +185,65 @@ router.get("/profile2", protectRoute, adminRoute, getProfile2);
  *         description: Invalid current password
  */
 router.put("/update-password", protectRoute, updatePassword);
+
+/**
+ * @swagger
+ * /api/auth/user-details:
+ *   get:
+ *     summary: Get logged-in user details with content counts
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Returns the logged-in user's details with counts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   format: uuid
+ *                   example: "c0a80123-4567-89ab-cdef-0123456789ab"
+ *                 name:
+ *                   type: string
+ *                   example: "John Doe"
+ *                 email:
+ *                   type: string
+ *                   example: "john@example.com"
+ *                 dob:
+ *                   type: string
+ *                   format: date
+ *                   example: "1990-01-01"
+ *                 gender:
+ *                   type: string
+ *                   enum: ["male", "female", "rather_not_say"]
+ *                   example: "male"
+ *                 role:
+ *                   type: string
+ *                   enum: ["user", "admin", "support"]
+ *                   example: "user"
+ *                 status:
+ *                   type: string
+ *                   enum: ["active", "inactive", "locked"]
+ *                   example: "active"
+ *                 community_rating:
+ *                   type: integer
+ *                   example: 0
+ *                 videos_posted:
+ *                   type: integer
+ *                   example: 12
+ *                 articles_posted:
+ *                   type: integer
+ *                   example: 5
+ *                 createdAt:
+ *                   type: string
+ *                   example: 12-03-2025
+ *       401:
+ *         description: Unauthorized - invalid or missing token
+ */
+
+router.get("/user-details", protectRoute, getUserDetails);
 
 export default router;

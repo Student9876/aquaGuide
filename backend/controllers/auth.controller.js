@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import User from "../models/user.model.js"; // Sequelize model
-
+import VideoGuide from "../models/video.model.js";
+import TextModel from "../models/text.model.js";
 // --------------------
 // Token Helpers
 // --------------------
@@ -243,34 +244,40 @@ export const getProfile2 = async (req, res) => {
 export const updatePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    const userId = req.user.id; // from protectRoute JWT middleware
+    const userId = req.user.id;
 
     // Basic validation
     if (!currentPassword || !newPassword) {
-      return res.status(400).json({ message: "All fields required" });
+      const err = new Error("All fields required");
+      err.status = 400;
+      throw err;
     }
 
     if (currentPassword === newPassword) {
-      return res
-        .status(400)
-        .json({ message: "New password must be different" });
+      const err = new Error("New password must be different");
+      err.status = 400;
+      throw err;
     }
 
     // Fetch user
     const user = await User.findByPk(userId);
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      const err = new Error("User not found");
+      err.status = 404;
+      throw err;
     }
 
     // Check current password
     const isMatch = await bcrypt.compare(currentPassword, user.password);
 
     if (!isMatch) {
-      return res.status(400).json({ message: "Current password incorrect" });
+      const err = new Error("Current password incorrect");
+      err.status = 400;
+      throw err;
     }
 
-    // Hash & update new password
+    // Hash + update new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     user.password = hashedPassword;
@@ -278,6 +285,53 @@ export const updatePassword = async (req, res) => {
 
     res.json({ message: "Password updated successfully" });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Update password error:", err.message);
+
+    return res.status(err.status || 500).json({
+      message: err.message || "Server error",
+    });
+  }
+};
+
+export const getUserDetails = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const user = await User.findByPk(userId, {
+      attributes: [
+        "id",
+        "name",
+        "email",
+        "dob",
+        "gender",
+        "role",
+        "status",
+        "community_rating",
+        "createdAt", // ✅ added
+      ],
+    });
+
+    if (!user) {
+      const err = new Error("User not found");
+      err.status = 404;
+      throw err;
+    }
+
+    const videosPosted = await VideoGuide.count({
+      where: { submittedBy: userId },
+    });
+
+    const articlesPosted = await TextModel.count({
+      where: { author: userId },
+    });
+
+    res.status(200).json({
+      ...user.toJSON(),
+      videos_posted: videosPosted,
+      articles_posted: articlesPosted,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(error.status || 500).json({ message: error.message });
   }
 };

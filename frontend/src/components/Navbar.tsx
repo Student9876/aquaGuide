@@ -164,16 +164,28 @@ const Navbar = () => {
                     </div>
                     <div className="flex flex-col gap-3">
                       {isLoggedIn === "true" ? (
-                        <Button
-                          variant="outline"
-                          className="w-full"
-                          onClick={() => {
-                            dispatch(logout()),
-                              toast.success("Logged out successfully");
-                          }}
-                        >
-                          Logout
-                        </Button>
+                        <>
+                          <Link to="/profile" onClick={() => setIsOpen(false)}>
+                            <Button variant="ocean" className="w-full">
+                              Profile
+                            </Button>
+                          </Link>
+                          <Link to="/admin" onClick={() => setIsOpen(false)}>
+                            <Button variant="ocean" className="w-full">
+                              Admin Dashboard
+                            </Button>
+                          </Link>
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => {
+                              dispatch(logout()),
+                                toast.success("Logged out successfully");
+                            }}
+                          >
+                            Logout
+                          </Button>
+                        </>
                       ) : (
                         <>
                           <Link to="/login" onClick={() => setIsOpen(false)}>

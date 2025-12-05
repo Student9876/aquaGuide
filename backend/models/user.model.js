@@ -20,12 +20,12 @@ User.init(
       allowNull: false,
     },
     dob: {
-        type: DataTypes.DATEONLY,
-        allowNull: false,
+      type: DataTypes.DATEONLY,
+      allowNull: false,
     },
     gender: {
-        type: DataTypes.ENUM("male", "female", "rather_not_say"),
-        allowNull: false,
+      type: DataTypes.ENUM("male", "female", "rather_not_say"),
+      allowNull: false,
     },
     email: {
       type: DataTypes.STRING,
@@ -57,6 +57,12 @@ User.init(
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
       allowNull: true,
+    },
+
+    community_rating: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
     },
   },
   {
