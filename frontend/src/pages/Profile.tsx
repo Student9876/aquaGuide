@@ -24,11 +24,25 @@ import ChangePasswordModal from "@/components/ChangePasswordModal";
 import { toast } from "sonner";
 import { UserDetailsResponse } from "@/api/apiTypes";
 import { authApi } from "@/api/modules/auth";
+import UploadPictureModal from "@/components/UploadPictureModal";
 
 const Profile = () => {
   const { name, email } = useSelector((state: RootState) => state.user);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [isUploadPictureOpen, setIsUploadPictureOpen] = useState(false);
+
+  const handleUploadPicture = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setProfileImage(e.target?.result as string);
+      toast.success("Profile picture updated successfully!");
+    };
+    reader.readAsDataURL(file);
+  };
+
   const [userDetails, setUserDetails] = useState<UserDetailsResponse>({
     id: "N/A",
     name: "N/A",
@@ -45,10 +59,20 @@ const Profile = () => {
 
   useEffect(() => {
     const getUser = async () => {
+      setLoading(true);
       try {
         const res = await authApi.getUser();
         setUserDetails(res?.data);
-      } catch (error) {}
+      } catch (error) {
+        const message =
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed get user details";
+
+        toast.error(message); // ✅ show error
+      } finally {
+        setLoading(false);
+      }
     };
     getUser();
   }, []);
@@ -74,10 +98,6 @@ const Profile = () => {
     toast.success("Successfully subscribed to newsletter!");
   };
 
-  const handleUpdatePicture = () => {
-    toast.info("Profile picture upload coming soon!");
-  };
-
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       <h1 className="text-3xl font-bold ocean-gradient bg-clip-text text-transparent mb-8">
@@ -99,7 +119,7 @@ const Profile = () => {
                 size="icon"
                 variant="secondary"
                 className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full"
-                onClick={handleUpdatePicture}
+                onClick={() => setIsUploadPictureOpen(true)}
               >
                 <Camera className="h-4 w-4" />
               </Button>
@@ -157,7 +177,10 @@ const Profile = () => {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Button variant="outline" onClick={handleUpdatePicture}>
+              <Button
+                variant="outline"
+                onClick={() => setIsUploadPictureOpen(true)}
+              >
                 <Camera className="h-4 w-4 mr-2" />
                 Update Picture
               </Button>
@@ -289,6 +312,12 @@ const Profile = () => {
       <ChangePasswordModal
         open={isChangePasswordOpen}
         onOpenChange={setIsChangePasswordOpen}
+      />
+
+      <UploadPictureModal
+        isOpen={isUploadPictureOpen}
+        onClose={() => setIsUploadPictureOpen(false)}
+        onUpload={handleUploadPicture}
       />
     </div>
   );
