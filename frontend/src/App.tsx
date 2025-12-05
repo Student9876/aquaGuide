@@ -21,6 +21,8 @@ import store from "./store/store";
 import PublicRoute from "./routes/publicRoute";
 import Profile from "./pages/Profile";
 import PrivateRoute from "./routes/privateRoute";
+import AdminLayout from "./components/AdminLayout";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -84,6 +86,17 @@ const App = () => (
                   <Layout>
                     <Profile />
                   </Layout>
+                }
+              />
+            </Route>
+
+            <Route element={<PrivateRoute />}>
+              <Route
+                path="/admin"
+                element={
+                  <AdminLayout>
+                    <AdminDashboard />
+                  </AdminLayout>
                 }
               />
             </Route>
