@@ -60,3 +60,17 @@ export interface UpdatePasswordPayload {
 export interface UpdatePasswordResponse {
   message: string;
 }
+
+export interface UserDetailsResponse {
+  id: string;
+  name: string;
+  email: string;
+  dob: string; // ISO date string, e.g. "1990-01-01"
+  gender: "male" | "female" | "rather_not_say";
+  role: "user" | "admin" | "support";
+  status: "active" | "inactive" | "locked";
+  community_rating: number;
+  createdAt: string; // ISO date string
+  videos_posted: number;
+  articles_posted: number;
+}
