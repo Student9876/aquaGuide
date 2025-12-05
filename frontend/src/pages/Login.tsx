@@ -15,6 +15,7 @@ import { authApi } from "@/api/modules/auth";
 import { toast } from "sonner";
 import { setAuthData } from "@/store/userSlice";
 import { useDispatch } from "react-redux";
+import SecondaryNav from "@/components/SecondaryNav";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -40,69 +41,72 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Fish className="h-16 w-16 mx-auto text-primary mb-4" />
-          <h1 className="text-3xl font-bold mb-2">Welcome Back, Aquarist!</h1>
-          <p className="text-muted-foreground">
-            Dive back into your aquatic community
-          </p>
+    <>
+      <SecondaryNav />
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <Fish className="h-16 w-16 mx-auto text-primary mb-4" />
+            <h1 className="text-3xl font-bold mb-2">Welcome Back, Aquarist!</h1>
+            <p className="text-muted-foreground">
+              Dive back into your aquatic community
+            </p>
+          </div>
+
+          <Card className="glass-effect">
+            <CardHeader>
+              <CardTitle>Sign In</CardTitle>
+              <CardDescription>
+                Enter your credentials to access your account
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="userId">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <Button type="submit" className="w-full" variant="ocean">
+                  {loading ? "Loading....." : "Dive in"}
+                </Button>
+
+                <div className="text-center text-sm">
+                  <span className="text-muted-foreground">
+                    Don't have an account?{" "}
+                  </span>
+                  <Link
+                    to="/register"
+                    className="text-primary hover:underline font-medium"
+                  >
+                    Join the reef
+                  </Link>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
         </div>
-
-        <Card className="glass-effect">
-          <CardHeader>
-            <CardTitle>Sign In</CardTitle>
-            <CardDescription>
-              Enter your credentials to access your account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="userId">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-
-              <Button type="submit" className="w-full" variant="ocean">
-                {loading ? "Loading....." : "Dive in"}
-              </Button>
-
-              <div className="text-center text-sm">
-                <span className="text-muted-foreground">
-                  Don't have an account?{" "}
-                </span>
-                <Link
-                  to="/register"
-                  className="text-primary hover:underline font-medium"
-                >
-                  Join the reef
-                </Link>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
       </div>
-    </div>
+    </>
   );
 };
 

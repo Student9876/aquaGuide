@@ -14,6 +14,8 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import ManageTextGuides from "@/components/admin/ManageTextGuides";
+import ManageVideoGuides from "@/components/admin/ManageVideoGuides";
 
 type TabType =
   | "dashboard"
@@ -95,9 +97,9 @@ const AdminDashboard = () => {
       case "manage-forum":
         return <ManageForumContent />;
       case "manage-text-guides":
-        return <ManageTextGuidesContent />;
+        return <ManageTextGuides />;
       case "manage-video-guides":
-        return <ManageVideoGuidesContent />;
+        return <ManageVideoGuides />;
       case "manage-species":
         return <ManageSpeciesContent />;
       case "manage-chat":
@@ -112,7 +114,7 @@ const AdminDashboard = () => {
   return (
     <div className=" bg-background">
       {/* Mobile Header */}
-      <div className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-card">
+      <div className="lg:hidden flex items-center justify-between p-4  border-b border-border bg-card">
         <h2 className="text-lg font-bold text-primary">Admin Panel</h2>
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
@@ -133,7 +135,7 @@ const AdminDashboard = () => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6">{renderContent()}</main>
+        <main className="flex-1 p-6 max-sm:p-0">{renderContent()}</main>
       </div>
     </div>
   );
@@ -181,13 +183,6 @@ const ManageForumContent = () => (
     <p className="text-muted-foreground">
       Moderate and manage forum discussions.
     </p>
-  </div>
-);
-
-const ManageTextGuidesContent = () => (
-  <div className="space-y-6">
-    <h1 className="text-3xl font-bold text-foreground">Manage Text Guides</h1>
-    <p className="text-muted-foreground">Create and edit text-based guides.</p>
   </div>
 );
 

@@ -17,9 +17,9 @@ const SecondaryNav = () => {
   const location = useLocation();
 
   return (
-    <nav className="border-b bg-card">
+    <nav className="border-b bg-card flex ">
       <div className="container mx-auto px-4">
-        <div className="flex items-center gap-1 overflow-x-auto">
+        <div className="flex items-center justify-center gap-1 overflow-x-auto">
           {navItems.map((item) => (
             <Link
               key={item.path}
