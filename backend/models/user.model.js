@@ -1,6 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import bcrypt from "bcryptjs";
 import sequelize from "../lib/db.js";
+import Comments from "./community_forum_comment.model.js";
 
 class User extends Model {
   async comparePassword(password) {
@@ -79,5 +80,5 @@ User.init(
     },
   }
 );
-
+User.hasMany(Comments, {foreignkey: "user_id"})
 export default User;

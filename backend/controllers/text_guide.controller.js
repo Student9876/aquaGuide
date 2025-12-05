@@ -3,9 +3,9 @@ import TextModel from "../models/text.model";
 
 export const get_all_guides = async (req, res) => {
     try {
-        const page = req.parseInt(req.query.page) || 1;
-        const per_page = 20;
-        const offset = (page - 1) * per_page
+        const page = parseInt(req.query.page) || 1;
+        const limit = 20;
+        const offset = (page - 1) * limit
         const { count, rows } = await TextModel.findAndCountAll({
             offset,
             limit,
@@ -16,8 +16,8 @@ export const get_all_guides = async (req, res) => {
             pagination: {
                 total_items: count,
                 current_page: page,
-                totalPages: Math.ceil(count / per_page),
-                pageSize: per_page
+                totalPages: Math.ceil(count / limit),
+                pageSize: limit
             }
         })
     }
@@ -29,9 +29,9 @@ export const get_all_guides = async (req, res) => {
 
 export const get_text_guide = async (req, res) => {
     try {
-        const page = req.parseInt(req.query.page) || 1;
-        const per_page = 20;
-        const offset = (page - 1) * per_page
+        const page = parseInt(req.query.page) || 1;
+        const limit = 20;
+        const offset = (page - 1) * limit
         const { count, rows } = await TextModel.findAndCountAll({
             where: { status: "approved" },
             offset,
@@ -43,8 +43,8 @@ export const get_text_guide = async (req, res) => {
             pagination: {
                 total_items: count,
                 current_page: page,
-                totalPages: Math.ceil(count / per_page),
-                pageSize: per_page
+                totalPages: Math.ceil(count / limit),
+                pageSize: limit
             }
         })
     }
