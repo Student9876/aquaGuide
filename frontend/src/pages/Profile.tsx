@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { Button } from "@/components/ui/button";
@@ -22,11 +22,36 @@ import {
 } from "lucide-react";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import { toast } from "sonner";
+import { UserDetailsResponse } from "@/api/apiTypes";
+import { authApi } from "@/api/modules/auth";
 
 const Profile = () => {
   const { name, email } = useSelector((state: RootState) => state.user);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [userDetails, setUserDetails] = useState<UserDetailsResponse>({
+    id: "N/A",
+    name: "N/A",
+    email: "N/A",
+    dob: "N/A", // ISO date string, e.g. "1990-01-01"
+    gender: "male",
+    role: "user",
+    status: "active",
+    community_rating: 0,
+    createdAt: "N/A", // ISO date string
+    videos_posted: 0,
+    articles_posted: 0,
+  });
+
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const res = await authApi.getUser();
+        setUserDetails(res?.data);
+      } catch (error) {}
+    };
+    getUser();
+  }, []);
 
   // Mock data for activity and contributions
   const activityData = {

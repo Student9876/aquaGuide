@@ -10,9 +10,7 @@ const PublicRoute = () => {
   const isTokenValid = () => {
     if (!accessToken || !tokenExpiry) return false;
 
-    const now = Date.now();
-    const expiryTime = new Date(tokenExpiry).getTime();
-    return now < expiryTime;
+    return true;
   };
 
   // ✅ If already logged in, redirect to dashboard
