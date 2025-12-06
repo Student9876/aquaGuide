@@ -45,9 +45,11 @@ Comments.init(
 )
 
 Comments.belongsTo(CommunityForum,{
-    foreignKey: "forum_id"
+    foreignKey: "forum_id",
+    onDelete: "CASCADE"
 })
 Comments.belongsTo(User, {
-    foreignKey: "user_id"
+    foreignKey: "user_id",
+    onDelete: "CASCADE"
 })
 export default Comments;

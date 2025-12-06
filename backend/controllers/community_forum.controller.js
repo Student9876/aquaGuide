@@ -77,15 +77,42 @@ export const get_community_form_by_id = async (req, res)=>{
                 "message":"Community forum not found",
             })
         }
+        const {count, rows} = await Comments.findAndCountAll({
+            where: {forum_id: id}
+        })
         res.status(200).json({
             "message": "Community_forum found successfully",
-            "data": community_forum
+            "data": community_forum,
+            "comments": rows,
+            "total_comments": count 
         })
     }
     catch(err){
         console.error(err.message)
         res.status(500).json({
             message:"Error fetching community forum"
+        })
+    }
+}
+
+export const delete_Community_forum = async (req, res)=>{
+    try{
+        const user_id = req.user.id
+        const {id} = req.params
+        const community_forum = await CommunityForum.destroy({
+            where:{id: id}
+        })
+        if(community_forum ===0){
+            res.status(404).json({
+                "message":"Community Forum does not exist"
+            })
+        }
+        res.status(204).json({"message":"Deleted succesfully"})
+    }
+    catch(err){
+        console.error(err.message)
+        res.status(500).json({
+            "message":"Server error deleting forum"
         })
     }
 }

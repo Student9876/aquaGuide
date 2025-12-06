@@ -25,7 +25,7 @@ CommunityForum.init(
                 model: "Users",
                 key: "id"
             },
-            allowNull: false
+            allowNull: false,
         },
         is_private: {
             type: DataTypes.BOOLEAN,
@@ -41,6 +41,7 @@ CommunityForum.init(
     }
 )
 CommunityForum.hasMany(Comments,{
-    foreignKey: "forum_id"
+    foreignKey: "forum_id",
+    onDelete: "CASCADE"
 })
 export default CommunityForum;
