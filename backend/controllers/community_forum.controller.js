@@ -48,7 +48,7 @@ export const get_community_forum = async (req, res)=>{
 export const get_community_form_by_id = async (req, res)=>{
     try{
         const {id} = req.params
-        const community_forum = CommunityForum.findbyPK(id)
+        const community_forum = await CommunityForum.findbyPK(id)
         if(community_forum == null){
             res.status(404).json({
                 "message":"Community forum not found",
@@ -70,18 +70,90 @@ export const get_community_form_by_id = async (req, res)=>{
 export const add_comment_to_forum = async (req, res)=>{
     try{
         const {forum_id} = req.params
-        const forum = CommunityForum.findbyPK(forum_id)
+        const forum = await CommunityForum.findbyPK(forum_id)
         if(forum == null){
             res.status(404).json({
                 "message": "No forum found"
             })
         }
-        const comment = Comments.create()
+        const user_id = req.user.id
+        const {content} = req.body
+        const comment = Comments.create(
+            user_id,
+            forum_id,
+            content
+        )
+        res.status(201).json({
+            "data": comment,
+            "message": "Successfully created"
+        })
     }
     catch(err){
         console.error(err.message)
         res.status(500).json({
             message: "Error occured adding comment"
         })
+    }
+}
+
+export const upvote_comment = async (req, res)=>{
+    try{
+        const {comment_id} = req.params
+        const comment = await Comments.findbyPK(comment_id)
+        if(comment == null){
+            res.status(404).json({
+                "message":"Comment not found"
+            })
+        }
+        await comment.increment({upvote: 1});
+        await comment.reload();
+        res.status(200).json({
+            "data": comment,
+            "message": "Upvoted successfully"
+        })
+    }
+    catch(err){
+        console.error(err.message)
+        res.status(500).json({
+            "message":"Some error occured upvoting the comment"
+        })
+    }
+}
+
+export const downvote_comment = async(req, res) =>{
+    try{
+        const {comment_id} = req.params
+        const comment = await Comments.findbyPK(comment_id)
+        if(comment == null){
+            res.status(404).json({
+                "message":"comment not found"
+            })
+        }
+        await comment.decrement({upvote: 1})
+        await comment.reload()
+        res.status(200).json({"data":comment,
+            "message": "Comment downvoted successfully"
+        })
+    }
+    catch(err){
+        console.error(err.message)
+        res.status(500).json({"message":"Error occured downvoting comment"})
+    }
+}
+
+export const delete_comment = async(req, res)=>{
+    try{
+        const {comment_id} = req.params
+        const delete_comment = await Comments.destroy({
+            where: {id: comment_id}
+        });
+        if(delete_comment===0){
+            return res.status(404).json({"message":"Comment not found"})
+        }
+        res.status(204).json({"message":"Comment deleted succesfully"})
+    }
+    catch(err){
+        console.error(err.message)
+        res.status(500).json({"message":"Some error occured deleting comment"})
     }
 }

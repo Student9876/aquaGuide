@@ -12,6 +12,10 @@ Comments.init(
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true,
         },
+        content: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
         user_id: {
             type: DataTypes.UUID,
             references: {
