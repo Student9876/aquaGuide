@@ -81,3 +81,15 @@ export interface UserDetailsResponse {
 export interface RoleResponse {
   role: string;
 }
+
+export interface VideoPayload {
+  title: string;
+  youtubeLink: string;
+  category?: string;
+  description?: string;
+}
+
+export interface VideoResponse {
+  message: string;
+  video: VideoPayload;
+}

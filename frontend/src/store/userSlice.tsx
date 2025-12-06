@@ -1,14 +1,4 @@
-import { authApi } from "@/api/modules/auth";
 import { createSlice } from "@reduxjs/toolkit";
-
-// const getRoles = async() => {
-//   try {
-//     const response = await authApi.getRole()
-//   } catch (error) {
-//     console.log(error);
-//     return "user"
-//   }
-// }
 
 const userSlice = createSlice({
   name: "user",
@@ -19,13 +9,17 @@ const userSlice = createSlice({
     name: localStorage.getItem("name") || null,
     email: localStorage.getItem("email") || null,
     isLoggedIn: localStorage.getItem("isLoggedIn") || null,
-    userid: localStorage.getItem("iuserid") || null,
-    role: "",
+    userid: localStorage.getItem("userid") || null,
+    role: "user",
   },
   reducers: {
     setName: (state, action) => {
       state.name = action.payload;
       localStorage.setItem("firstName", action.payload);
+    },
+
+    setRole: (state, action) => {
+      state.role = action.payload;
     },
 
     setIsLoggedIn: (state, action) => {
@@ -81,6 +75,7 @@ const userSlice = createSlice({
       state.email = null;
       state.userid = null;
       state.isLoggedIn = null;
+      state.role = null;
       localStorage.clear();
     },
   },
@@ -91,6 +86,7 @@ export const {
   setRefreshToken,
   setTokenExpiry,
   setAuthData,
+  setRole,
   logout,
   setIsLoggedIn,
 } = userSlice.actions;

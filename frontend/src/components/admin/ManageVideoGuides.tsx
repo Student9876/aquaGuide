@@ -306,7 +306,6 @@ const ManageVideoGuides = () => {
                   <TableHead className="hidden sm:table-cell">
                     Category
                   </TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -348,16 +347,6 @@ const ManageVideoGuides = () => {
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">
                       <Badge variant="secondary">{video.category}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
