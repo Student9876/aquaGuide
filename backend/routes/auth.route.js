@@ -8,6 +8,7 @@ import {
   refreshToken,
   signup,
   updatePassword,
+  suggestUserIds
 } from "../controllers/auth.controller.js";
 import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
 
@@ -245,5 +246,5 @@ router.put("/update-password", protectRoute, updatePassword);
  */
 
 router.get("/user-details", protectRoute, getUserDetails);
-
+router.post("/suggest_userids", suggestUserIds);
 export default router;
