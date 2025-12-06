@@ -77,3 +77,7 @@ export interface UserDetailsResponse {
   videos_posted: number;
   articles_posted: number;
 }
+
+export interface RoleResponse {
+  role: string;
+}
