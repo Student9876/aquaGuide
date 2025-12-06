@@ -11,12 +11,11 @@ CommunityForum.init(
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true,
         },
-
-        name: {
+        title: {
             type: DataTypes.STRING,
             allowNull: false
         },
-        desciption: {
+        content: {
             type: DataTypes.TEXT,
             allowNull: false
         },

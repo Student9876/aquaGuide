@@ -2,6 +2,29 @@ import sequelize from "../lib/db";
 import Comments from "../models/community_forum_comment.model";
 import CommunityForum from "../models/community_forum_model";
 
+export const create_community_forum = async(req, res)=>{
+    try{
+        const creator_id = req.user.id
+        const {title, content} = req.body
+        const community = await CommunityForum.create({
+            title,
+            content,
+            creator_id
+        })
+        res.status(201).json({
+            "message":"Community Created succesfully",
+            "data":community
+        })
+    }
+    catch(err){
+        console.error(err)
+        res.status(500).json({
+            "message":"Server error failed to create Community Forum"
+        })
+    }
+
+}
+
 export const get_community_forum = async (req, res)=>{
     try{
         const page = parseInt(req.query.page) || 1;
