@@ -1,14 +1,14 @@
-import TextModel from "../models/text.model";
+import TextModel from "../models/text.model.js";
 
 
 export const get_all_guides = async (req, res) => {
     try {
-        const page = req.parseInt(req.query.page) || 1;
+        const page = parseInt(req.query.page) || 1;
         const per_page = 20;
         const offset = (page - 1) * per_page
         const { count, rows } = await TextModel.findAndCountAll({
             offset,
-            limit,
+            limit: per_page,
             order: [['created_at', 'DESC']]
         })
         res.status(200).json({
@@ -29,13 +29,13 @@ export const get_all_guides = async (req, res) => {
 
 export const get_text_guide = async (req, res) => {
     try {
-        const page = req.parseInt(req.query.page) || 1;
+        const page = parseInt(req.query.page) || 1;
         const per_page = 20;
         const offset = (page - 1) * per_page
         const { count, rows } = await TextModel.findAndCountAll({
             where: { status: "approved" },
             offset,
-            limit,
+            limit: per_page,
             order: [['created_at', 'DESC']]
         })
         res.status(200).json({

@@ -9,6 +9,7 @@ import videoRoutes from "./routes/video.route.js";
 import manageUserRoutes from "./routes/admin.manageuser.route.js";
 import speciesRoutes from "./routes/species.route.js";
 import speciesPublicRoutes from "./routes/species.public.route.js";
+import textGuideRoutes from "./routes/text_guide.route.js";
 import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
@@ -102,7 +103,7 @@ app.use("/api/videos", videoRoutes);
 app.use("/api/manage_users", manageUserRoutes);
 app.use("/api/manage_species", speciesRoutes);
 app.use("/api", speciesPublicRoutes);
-
+app.use("/api/textguides", textGuideRoutes);
 app.get("/", (req, res) => {
   res.send(
     'Welcome to Aqua Guide API — visit <a href="/api-docs">/api-docs</a> for documentation'
