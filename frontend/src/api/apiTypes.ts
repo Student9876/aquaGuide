@@ -111,6 +111,10 @@ export interface VideoArray {
   updatedAt: string; // ISO date string
 }
 
+export interface approvalIds {
+  ids: string[];
+}
+
 export interface getVideoResponse {
   message: string;
   video: VideoArray[];

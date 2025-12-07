@@ -121,18 +121,31 @@ const ManageVideoGuides = () => {
     }
   };
 
-  const handleBulkAction = (action: "approve" | "reject" | "delete") => {
-    if (action === "delete") {
-      setVideoArray(videoArray.filter((v) => !selectedVideos.includes(v.id)));
-    } else {
-      setVideoArray(
-        videoArray.map((v) =>
-          selectedVideos.includes(v.id)
-            ? { ...v, status: action === "approve" ? "approved" : "rejected" }
-            : v
-        )
-      );
+  const handleBulkAction = async (action: "approve" | "reject" | "delete") => {
+    setCallApi(false);
+    try {
+      if (action === "delete") {
+        const res = await videoApi.setDelete({
+          ids: selectedVideos,
+        });
+        toast.success("Videos deleted successfully");
+      } else if (action === "approve") {
+        const res = await videoApi.setApprove({
+          ids: selectedVideos,
+        });
+        toast.success("Videos deleted successfully");
+      } else {
+        const res = await videoApi.setReject({
+          ids: selectedVideos,
+        });
+        toast.success("Videos rejected successfully");
+      }
+    } catch (error) {
+      toast.error("Something wrong happened");
+    } finally {
+      setCallApi(true);
     }
+
     setSelectedVideos([]);
   };
 

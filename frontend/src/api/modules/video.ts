@@ -1,5 +1,10 @@
 import httpClient from "@/api/axiosSetup";
-import { getVideoResponse, VideoPayload, VideoResponse } from "../apiTypes";
+import {
+  approvalIds,
+  getVideoResponse,
+  VideoPayload,
+  VideoResponse,
+} from "../apiTypes";
 
 export const videoApi = {
   create: (data: VideoPayload) =>
@@ -9,6 +14,21 @@ export const videoApi = {
 
   getAllVideo: () =>
     httpClient.get<getVideoResponse>("/api/videos", {
+      headers: { useAuth: true },
+    }),
+
+  setApprove: (data: approvalIds) =>
+    httpClient.put<any>("/api/videos/approve", data, {
+      headers: { useAuth: true },
+    }),
+
+  setReject: (data: approvalIds) =>
+    httpClient.put<any>("/api/videos/reject", data, {
+      headers: { useAuth: true },
+    }),
+
+  setDelete: (data: approvalIds) =>
+    httpClient.post<any>("/api/videos/delete", data, {
       headers: { useAuth: true },
     }),
 };
