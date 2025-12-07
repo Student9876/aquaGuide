@@ -1,4 +1,5 @@
 // controllers/videoGuide.controller.js
+import { Op } from "sequelize";
 import VideoGuide from "../models/video.model.js";
 import { getVideoDetails } from "../utils/youtube.util.js";
 
@@ -63,9 +64,33 @@ export const getAllVideos = async (req, res) => {
 };
 
 export const approveVideo = async (req, res) => {
-  const { id } = req.params;
-  await VideoGuide.update({ status: "approved" }, { where: { id } });
-  res.json({ message: "Video approved." });
+  try {
+    const { ids } = req.body; // Expect array of ids
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: "ids must be a non-empty array" });
+    }
+
+    const updatedCount = await VideoGuide.update(
+      { status: "approved" },
+      {
+        where: {
+          id: {
+            [Op.in]: ids,
+          },
+        },
+      }
+    );
+
+    res.json({
+      message: "Videos approved.",
+      updatedCount,
+    });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Something went wrong", error: err.message });
+  }
 };
 
 export const rejectVideo = async (req, res) => {

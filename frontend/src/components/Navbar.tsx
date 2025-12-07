@@ -35,7 +35,9 @@ const Navbar = () => {
         return "user";
       }
     };
-    getRoles();
+    if (userid) {
+      getRoles();
+    }
   }, [userid]);
 
   const { isLoggedIn } = useSelector((state: RootState) => state.user);

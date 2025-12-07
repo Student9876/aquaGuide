@@ -5,7 +5,7 @@ const userSlice = createSlice({
   initialState: {
     accessToken: localStorage.getItem("accessToken") || null,
     refreshToken: localStorage.getItem("refreshToken") || null,
-    tokenExpiry: localStorage.getItem("tokenExpiry") || null,
+    tokenExpiry: localStorage.getItem("tokenExpiry") || 0,
     name: localStorage.getItem("name") || null,
     email: localStorage.getItem("email") || null,
     isLoggedIn: localStorage.getItem("isLoggedIn") || null,

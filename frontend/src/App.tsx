@@ -44,7 +44,10 @@ const App = () => {
         return "user";
       }
     };
-    getRoles();
+
+    if (userid) {
+      getRoles();
+    }
   }, []);
 
   return (

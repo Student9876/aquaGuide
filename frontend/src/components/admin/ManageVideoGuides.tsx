@@ -22,6 +22,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Eye, Pencil, Check, X, Trash2, Play, Youtube } from "lucide-react";
+import { VideoPayload } from "@/api/apiTypes";
+import { toast } from "sonner";
+import { videoApi } from "@/api/modules/video";
 
 interface VideoGuide {
   id: string;
@@ -79,6 +82,12 @@ const ManageVideoGuides = () => {
   const [videoTitle, setVideoTitle] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
+  const [postVideo, setPostVideo] = useState<VideoPayload>({
+    youtubeLink: "",
+    category: "",
+    title: "",
+    description: "",
+  });
 
   const extractVideoId = (url: string) => {
     const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
@@ -118,24 +127,49 @@ const ManageVideoGuides = () => {
     setSelectedVideos([]);
   };
 
-  const handlePostVideo = () => {
-    if (!youtubeLink.trim() || !videoTitle.trim()) return;
-    const newVideo: VideoGuide = {
-      id: Date.now().toString(),
-      channelIcon: "https://api.dicebear.com/7.x/initials/svg?seed=AD",
-      thumbnail: videoId
-        ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
-        : "https://via.placeholder.com/320x180",
-      title: videoTitle,
-      status: "approved",
-      addedOn: new Date().toISOString().split("T")[0],
-      category: category || "Uncategorized",
-    };
-    setVideos([newVideo, ...videos]);
-    setYoutubeLink("");
-    setVideoTitle("");
-    setCategory("");
-    setDescription("");
+  function isValidYouTubeUrl(url: string) {
+    const regex =
+      /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:\S+)?$/;
+
+    return regex.test(url);
+  }
+
+  const handlePostVideo = async (e: any) => {
+    e.preventDefault();
+    try {
+      if (!youtubeLink.trim() || !videoTitle.trim()) {
+        toast.error("Please provide the required fields .");
+        return;
+      }
+
+      if (!isValidYouTubeUrl(youtubeLink.trim())) {
+        toast.error("Please provide a valid youtube url.");
+        return;
+      }
+
+      const videoRequest: VideoPayload = {
+        youtubeLink: youtubeLink,
+        title: videoTitle,
+        description: description,
+        category: category,
+      };
+
+      const res = await videoApi.create(videoRequest);
+
+      toast.success("Video guide uploaded succesfully");
+
+      setYoutubeLink("");
+      setVideoTitle("");
+      setCategory("");
+      setDescription("");
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Error adding video guid ";
+      toast.error(message);
+    } finally {
+    }
   };
 
   const getStatusBadge = (status: VideoGuide["status"]) => {
@@ -185,18 +219,12 @@ const ManageVideoGuides = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="video-category">Category (Optional)</Label>
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="video-category"
+                  placeholder="Enter video category..."
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="video-description">
