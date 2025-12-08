@@ -27,6 +27,14 @@ CommunityForum.init(
             },
             allowNull: false,
         },
+        likes: {
+            type: DataTypes.ARRAY,
+            defaultValue: []
+        },
+        dislike: {
+            type: DataTypes.ARRAY,
+            defaultValue: []
+        },
         is_private: {
             type: DataTypes.BOOLEAN,
             defaultValue: false,

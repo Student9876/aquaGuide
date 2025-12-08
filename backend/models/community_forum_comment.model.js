@@ -31,10 +31,6 @@ Comments.init(
                 key: "id"
             },
             allowNull: false
-        },
-        upvote: {
-            type: DataTypes.INTEGER,
-            defaultValue: 0
         }
     },
     {

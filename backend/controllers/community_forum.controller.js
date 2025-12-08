@@ -98,14 +98,28 @@ export const get_community_form_by_id = async (req, res)=>{
 export const delete_Community_forum = async (req, res)=>{
     try{
         const user_id = req.user.id
+        const user = req.user
         const {id} = req.params
-        const community_forum = await CommunityForum.destroy({
-            where:{id: id}
-        })
-        if(community_forum ===0){
-            res.status(404).json({
-                "message":"Community Forum does not exist"
+        if(user.role != "admin" || user.role != "support")
+        {
+            const community_forum = await CommunityForum.destroy({
+                where:{id: id, creator_id: user_id}
             })
+            if(community_forum ===0){
+                res.status(404).json({
+                    "message":"Community Forum does not exist"
+                })
+            }
+        }
+        else{
+            const community_forum = await CommunityForum.destroy({
+                where:{id: id}
+            })
+            if(community_forum ===0){
+                res.status(404).json({
+                    "message":"Community Forum does not exist"
+                })
+            }
         }
         res.status(204).json({"message":"Deleted succesfully"})
     }
@@ -146,51 +160,71 @@ export const add_comment_to_forum = async (req, res)=>{
     }
 }
 
-export const upvote_comment = async (req, res)=>{
+export const like_community = async (req, res)=>{
     try{
-        const {comment_id} = req.params
-        const comment = await Comments.findbyPK(comment_id)
-        if(comment == null){
-            res.status(404).json({
-                "message":"Comment not found"
+        const {forum_id} = req.params
+        const user_id = req.user.id
+        const community = await CommunityForum.findbyPK(forum_id)
+        if(!community){
+            res.status(404).json({"message":"Community Not found"})
+        }
+        if(community.likes.include(user_id)){
+            const new_likes_list = community.likes.filter(id  => id!=user_id)
+            community.likes = new_likes_list
+            await community.save()
+        }
+        else{
+            const newlikes = [...post.likes, user_id]
+            await community.update({
+                likes: newlikes
             })
         }
-        await comment.increment({upvote: 1});
-        await comment.reload();
+        await community.reload()
         res.status(200).json({
-            "data": comment,
-            "message": "Upvoted successfully"
+            "data": community,
+            "message": "Liked successfully"
         })
     }
     catch(err){
         console.error(err.message)
         res.status(500).json({
-            "message":"Some error occured upvoting the comment"
+            "message":"Some error occured liking the forum"
         })
     }
 }
 
-export const downvote_comment = async(req, res) =>{
+export const dislike_community = async (req, res)=>{
     try{
-        const {comment_id} = req.params
-        const comment = await Comments.findbyPK(comment_id)
-        if(comment == null){
-            res.status(404).json({
-                "message":"comment not found"
+        const {forum_id} = req.params
+        const user_id = req.user.id
+        const community = await CommunityForum.findbyPK(forum_id)
+        if(!community){
+            res.status(404).json({"message":"Community Not found"})
+        }
+        if(community.dislikes.include(user_id)){
+            const new_dislikes_list = community.likes.filter(id  => id!=user_id)
+            community.dislikes = new_dislikes_list
+            await community.save()
+        }
+        else{
+            const newdislikes = [...post.dislikes, user_id]
+            await community.update({
+                dislikes: newdislikes
             })
         }
-        await comment.decrement({upvote: 1})
-        await comment.reload()
-        res.status(200).json({"data":comment,
-            "message": "Comment downvoted successfully"
+        await community.reload();
+        res.status(200).json({
+            "data": community,
+            "message": "Disliked successfully"
         })
     }
     catch(err){
         console.error(err.message)
-        res.status(500).json({"message":"Error occured downvoting comment"})
+        res.status(500).json({
+            "message":"Some error occured disliking the forum"
+        })
     }
 }
-
 export const delete_comment = async(req, res)=>{
     try{
         const {comment_id} = req.params
