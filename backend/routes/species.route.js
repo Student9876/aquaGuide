@@ -29,10 +29,6 @@ const router = express.Router();
  *     responses:
  *       200:
  *         description: Species management list retrieved
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden
  */
 router.get(
   "/species-management",
