@@ -17,6 +17,10 @@ import videoRoutes from "./routes/video.route.js";
 import manageUserRoutes from "./routes/admin.manageuser.route.js";
 import speciesRoutes from "./routes/species.route.js";
 import speciesPublicRoutes from "./routes/species.public.route.js";
+import textGuideRoutes from "./routes/text_guide.route.js";
+import cors from "cors";
+import swaggerUi from "swagger-ui-express";
+import swaggerJsdoc from "swagger-jsdoc";
 
 dotenv.config();
 
@@ -108,6 +112,7 @@ app.use("/api/videos", videoRoutes);
 app.use("/api/manage_users", manageUserRoutes);
 app.use("/api/manage_species", speciesRoutes);
 app.use("/api", speciesPublicRoutes);
+app.use("/api/textguides", textGuideRoutes);
 app.use("/api/community", communityRoutes)
 app.use("/uploads", express.static("uploads"));
 
