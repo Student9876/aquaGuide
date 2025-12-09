@@ -242,8 +242,8 @@ router.post("/image_upload", supportOrAdminRoute, upload.single("image"), image_
  *     responses:
  *       200:
  *         description: Community approved successfully
- *       403:
- *         description: Not authorized
+ *       404:
+ *         description: Not found
  */
 router.put("/approve_community", supportOrAdminRoute, approve_community);
 
@@ -260,8 +260,8 @@ router.put("/approve_community", supportOrAdminRoute, approve_community);
  *     responses:
  *       200:
  *         description: Community rejected successfully
- *       403:
- *         description: Not authorized
+ *       404:
+ *         description: Not found
  */
 router.put("/reject_communtiy", supportOrAdminRoute, reject_community);
 
@@ -278,8 +278,8 @@ router.put("/reject_communtiy", supportOrAdminRoute, reject_community);
  *     responses:
  *       200:
  *         description: Rejection request approved
- *       403:
- *         description: Not authorized
+ *       404:
+ *         description: Not found
  */
 router.put("/approve_rejection_request", adminRoute, rejection_approval);
 
