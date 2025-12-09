@@ -2,17 +2,21 @@ import express from "express";
 import session from "express-session";
 import flash from "connect-flash";
 import dotenv from "dotenv";
+import cors from "cors";
+
+import swaggerUi from "swagger-ui-express";
+import swaggerJsdoc from "swagger-jsdoc";
+
 import cookieParser from "cookie-parser";
+import setupAssociations from "./models/associations.js";
 import sequelize from "./lib/db.js"; // Sequelize connection
+
 import authRoutes from "./routes/auth.route.js"; // only auth route
+import communityRoutes from "./routes/community_forum.route.js"
 import videoRoutes from "./routes/video.route.js";
 import manageUserRoutes from "./routes/admin.manageuser.route.js";
 import speciesRoutes from "./routes/species.route.js";
 import speciesPublicRoutes from "./routes/species.public.route.js";
-import cors from "cors";
-import swaggerUi from "swagger-ui-express";
-import swaggerJsdoc from "swagger-jsdoc";
-import setupAssociations from "./models/associations.js";
 
 dotenv.config();
 
@@ -104,6 +108,8 @@ app.use("/api/videos", videoRoutes);
 app.use("/api/manage_users", manageUserRoutes);
 app.use("/api/manage_species", speciesRoutes);
 app.use("/api", speciesPublicRoutes);
+app.use("/api/community", communityRoutes)
+app.use("/uploads", express.static("uploads"));
 
 app.get("/", (req, res) => {
   res.send(

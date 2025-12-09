@@ -241,3 +241,23 @@ export const delete_comment = async(req, res)=>{
         res.status(500).json({"message":"Some error occured deleting comment"})
     }
 }
+
+export const image_upload = async(req, res)=>{
+    try{
+        if(!req.image_file){
+            res.status(400).json({
+                "message": "File not found"
+            })
+        }
+        const path = '/uploads/${req.image_file.filename}';
+
+        return res.status(202).json({
+            "message": "image uploaded successfully",
+            path
+        })
+    }
+    catch(err){
+        console.error(err.message)
+        return res.status(500).json({"message":"Image upload failed due to server error"})
+    }
+}
