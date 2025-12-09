@@ -40,7 +40,31 @@ CommunityForum.init(
             defaultValue: false,
             allowNull: false
         },
+        status: {
+            type: DataTypes.ENUM("pending", "approved", "rejected"),
+            defaultValue: "pending",
+            allowNull: false
+        },
+        rejection_justification: {
+            type: DataTypes.TEXT,
+            allowNull: true
 
+        },
+        rejection_requested_by: {
+            type: DataTypes.UUID,
+            references: {
+                model: "Users",
+                key: "id",
+            },
+            allowNull: true,
+            onDelete: "CASCADE",
+            onUpdate: "CASCADE"
+        },
+        rejection_status: {
+            type: DataTypes.ENUM("pending", "approved", "denied"),
+            defaultValue: "pending",
+            allowNull: true
+        }
     },
     {
         sequelize,

@@ -242,6 +242,59 @@ export const delete_comment = async(req, res)=>{
     }
 }
 
+export const reject_community = async(req, res)=>{
+    const user = req.user
+    const {forum_id} = req.params
+    const communtiy_forum = await CommunityForum.findByPk(forum_id)
+    if(!communtiy_forum){
+        req.status(404).json({"message":"Community Forum not found"})
+    }
+    if(communtiy_forum.status == "rejected"){
+        req.status(400).json({"message":"Community already rejected"})
+    }
+    if(user.role == "admin"){
+        communtiy_forum.status = "rejected"
+        await communtiy_forum.save()
+        res.status(200).json({"message":"Community rejected successfully"})
+    }
+    else{
+        const {rejection_justification} = req.body
+        communtiy_forum.rejection_justification = rejection_justification
+        communtiy_forum.rejection_requested_by = req.user.id
+        res.status(200).json({"message":"Rejection requested succesfully"})
+    }
+}
+
+export const rejection_approval = async(req, res)=>{
+    const {forum_id} = req.params
+    const community_forum = CommunityForum.findbyPK(forum_id)
+    if(!community_forum){
+        res.status(404).json({"message":"community_forum not found"})
+    }
+    community_forum.rejection_status = req.body.rejection_status
+    if(community_forum.rejection_status == "denied"){
+        community_forum.status = "accepted"
+    }
+    else if(community_forum.rejection_status == "approved"){
+        community_forum.status = "rejected"
+    }
+    await community_forum.save()
+    res.status(200).json({"message":"Rejection status updated successfully"})
+}
+
+export const approve_community = async(req, res)=>{
+    const user = req.user
+    const {forum_id} = req.params
+    
+    const community_forum = CommunityForum.findByPk(forum_id)
+    if(!community_forum){
+        res.status(404).json({"message":"Community forum not found"})
+    }
+    community_forum.status = "approved"
+    await community_forum.save()
+    res.status(200).json({"message":"Community forum approved"})
+}
+
 export const image_upload = async(req, res)=>{
     try{
         if(!req.image_file){

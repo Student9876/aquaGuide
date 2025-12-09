@@ -1,6 +1,6 @@
 import express from "express"
-import { add_comment_to_forum, create_community_forum, delete_comment, dislike_community, get_community_form_by_id, get_community_forum, image_upload, like_community } from "../controllers/community_forum.controller.js"
-import { protectRoute, supportOrAdminRoute } from "../middleware/auth.middleware.js"
+import { add_comment_to_forum, approve_community, create_community_forum, delete_comment, dislike_community, get_community_form_by_id, get_community_forum, image_upload, like_community, reject_community, rejection_approval } from "../controllers/community_forum.controller.js"
+import { adminRoute, protectRoute, supportOrAdminRoute } from "../middleware/auth.middleware.js"
 import upload from "../middleware/file_upload.middleware.js"
 
 const router = express.Router()
@@ -222,5 +222,58 @@ router.delete("/comment", protectRoute, delete_comment)
  *         description: File Not found or invalid file format
  */
 router.post("/image_upload", supportOrAdminRoute, upload.single("image"), image_upload)
+
+
+/**
+ * @swagger
+ * /api/approve_community:
+ *   put:
+ *     summary: Approve a community forum
+ *     tags: [Community]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Community approved successfully
+ *       403:
+ *         description: Not authorized
+ */
+router.put("/approve_community", supportOrAdminRoute, approve_community);
+
+
+
+/**
+ * @swagger
+ * /api/reject_communtiy:
+ *   put:
+ *     summary: Reject a community forum
+ *     tags: [Community]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Community rejected successfully
+ *       403:
+ *         description: Not authorized
+ */
+router.put("/reject_communtiy", supportOrAdminRoute, reject_community);
+
+
+
+/**
+ * @swagger
+ * /api/approve_rejection_request:
+ *   put:
+ *     summary: Approve a community rejection request (admin only)
+ *     tags: [Community]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Rejection request approved
+ *       403:
+ *         description: Not authorized
+ */
+router.put("/approve_rejection_request", adminRoute, rejection_approval);
 
 export default router;
