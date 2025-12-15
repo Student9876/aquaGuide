@@ -12,6 +12,10 @@ export const create_community_forum = async (req, res) => {
             content,
             creator_id
         })
+        if (req.user.role == "admin") {
+            community.status = "approved"
+            await community.save()
+        }
         res.status(201).json({
             "message": "Community Created succesfully",
             "data": community
@@ -108,7 +112,7 @@ export const get_approved_community_forum = async (req, res) => {
 export const get_community_form_by_id = async (req, res) => {
     try {
         const { id } = req.params
-        const community_forum = await CommunityForum.findbyPK(id)
+        const community_forum = await CommunityForum.findByPk(id)
         if (community_forum == null) {
             res.status(404).json({
                 "message": "Community forum not found",
@@ -136,7 +140,7 @@ export const delete_Community_forum = async (req, res) => {
     try {
         const user_id = req.user.id
         const user = req.user
-        const { id } = req.params
+        const { id } = req.query
         if (user.role != "admin" || user.role != "support") {
             const community_forum = await CommunityForum.destroy({
                 where: { id: id, creator_id: user_id }
@@ -170,7 +174,7 @@ export const delete_Community_forum = async (req, res) => {
 export const add_comment_to_forum = async (req, res) => {
     try {
         const { forum_id } = req.params
-        const forum = await CommunityForum.findbyPK(forum_id)
+        const forum = await CommunityForum.findByPk(forum_id)
         if (forum == null) {
             res.status(404).json({
                 "message": "No forum found"
@@ -178,11 +182,11 @@ export const add_comment_to_forum = async (req, res) => {
         }
         const user_id = req.user.id
         const { content } = req.body
-        const comment = Comments.create(
+        const comment = Comments.create({
             user_id,
             forum_id,
             content
-        )
+        })
         res.status(201).json({
             "data": comment,
             "message": "Successfully created"
@@ -198,72 +202,96 @@ export const add_comment_to_forum = async (req, res) => {
 
 export const like_community = async (req, res) => {
     try {
-        const { forum_id } = req.params
-        const user_id = req.user.id
-        const community = await CommunityForum.findbyPK(forum_id)
+        // forum_id should come from req.body for PUT, fallback to params for backward compatibility
+        const forum_id = req.body.forum_id;
+        const user_id = req.user.id;
+        const community = await CommunityForum.findByPk(forum_id);
         if (!community) {
-            res.status(404).json({ "message": "Community Not found" })
+            console.error(forum_id)
+            return res.status(404).json({ message: "Community Not found" });
         }
-        if (community.likes.include(user_id)) {
-            const new_likes_list = community.likes.filter(id => id != user_id)
-            community.likes = new_likes_list
-            await community.save()
+
+        // Ensure likes/dislike arrays are not null
+        if (!Array.isArray(community.likes)) community.likes = [];
+        if (!Array.isArray(community.dislike)) community.dislike = [];
+
+        // Remove user from dislikes if present
+        if (community.dislike.includes(user_id)) {
+            community.dislike = community.dislike.filter(id => id !== user_id);
         }
-        else {
-            const newlikes = [...post.likes, user_id]
-            await community.update({
-                likes: newlikes
-            })
+
+        // Toggle like: if already liked, remove; else add
+
+        if (community.likes.includes(user_id)) {
+            community.likes = community.likes.filter(id => id !== user_id);
+        } else {
+            // Assign a new array to trigger Sequelize change tracking
+            community.likes = [...community.likes, user_id];
         }
-        await community.reload()
-        res.status(200).json({
-            "data": community,
-            "message": "Liked successfully"
-        })
+
+        await community.save();
+        await community.reload();
+        return res.status(200).json({
+            data: community,
+            message: "Liked successfully"
+        });
+    } catch (err) {
+        console.error(err.message);
+        if (!res.headersSent) {
+            return res.status(500).json({
+                message: "Some error occurred liking the forum"
+            });
+        }
     }
-    catch (err) {
-        console.error(err.message)
-        res.status(500).json({
-            "message": "Some error occured liking the forum"
-        })
-    }
-}
+};
 
 export const dislike_community = async (req, res) => {
     try {
-        const { forum_id } = req.params
-        const user_id = req.user.id
-        const community = await CommunityForum.findbyPK(forum_id)
+        // forum_id should come from req.body for PUT, fallback to params for backward compatibility
+        const forum_id = req.body.forum_id;
+        const user_id = req.user.id;
+        const community = await CommunityForum.findByPk(forum_id);
         if (!community) {
-            res.status(404).json({ "message": "Community Not found" })
+            console.error(forum_id)
+            return res.status(404).json({ message: "Community Not found" });
         }
-        if (community.dislikes.include(user_id)) {
-            const new_dislikes_list = community.likes.filter(id => id != user_id)
-            community.dislikes = new_dislikes_list
-            await community.save()
+
+        // Ensure likes/dislike arrays are not null
+        if (!Array.isArray(community.likes)) community.likes = [];
+        if (!Array.isArray(community.dislike)) community.dislike = [];
+
+        // Remove user from dislikes if present
+        if (community.likes.includes(user_id)) {
+            community.likes = community.likes.filter(id => id !== user_id);
         }
-        else {
-            const newdislikes = [...post.dislikes, user_id]
-            await community.update({
-                dislikes: newdislikes
-            })
+
+        // Toggle like: if already liked, remove; else add
+
+        if (community.dislike.includes(user_id)) {
+            community.dislike = community.dislike.filter(id => id !== user_id);
+        } else {
+            // Assign a new array to trigger Sequelize change tracking
+            community.dislike = [...community.dislike, user_id];
         }
+
+        await community.save();
         await community.reload();
-        res.status(200).json({
-            "data": community,
-            "message": "Disliked successfully"
-        })
-    }
-    catch (err) {
-        console.error(err.message)
-        res.status(500).json({
-            "message": "Some error occured disliking the forum"
-        })
+        return res.status(200).json({
+            data: community,
+            message: "DisLiked successfully"
+        });
+    } catch (err) {
+        console.error(err.message);
+        if (!res.headersSent) {
+            return res.status(500).json({
+                message: "Some error occurred liking the forum"
+            });
+        }
     }
 }
 export const delete_comment = async (req, res) => {
     try {
-        const { comment_id } = req.params
+        const { comment_id } = req.query
         const delete_comment = await Comments.destroy({
             where: { id: comment_id }
         });
@@ -281,7 +309,7 @@ export const delete_comment = async (req, res) => {
 export const reject_community = async (req, res) => {
     try {
         const user = req.user
-        const { forum_id } = req.params
+        const { forum_id } = req.query
         const communtiy_forum = await CommunityForum.findByPk(forum_id)
         if (!communtiy_forum) {
             req.status(404).json({ "message": "Community Forum not found" })
@@ -308,8 +336,8 @@ export const reject_community = async (req, res) => {
 
 export const rejection_approval = async (req, res) => {
     try {
-        const { forum_id } = req.params
-        const community_forum = CommunityForum.findbyPK(forum_id)
+        const { forum_id } = req.query
+        const community_forum = await CommunityForum.findByPk(forum_id)
         if (!community_forum) {
             res.status(404).json({ "message": "community_forum not found" })
         }
@@ -331,9 +359,9 @@ export const rejection_approval = async (req, res) => {
 export const approve_community = async (req, res) => {
     try {
         const user = req.user
-        const { forum_id } = req.params
+        const { forum_id } = req.query
 
-        const community_forum = CommunityForum.findByPk(forum_id)
+        const community_forum = await CommunityForum.findByPk(forum_id)
         if (!community_forum) {
             res.status(404).json({ "message": "Community forum not found" })
         }
@@ -353,7 +381,7 @@ export const image_upload = async (req, res) => {
                 "message": "File not found"
             })
         }
-        const { forum_id } = req.params
+        const { forum_id } = req.query
         const community_forum = await CommunityForum.findByPk(forum_id)
 
         if (!community_forum) {
