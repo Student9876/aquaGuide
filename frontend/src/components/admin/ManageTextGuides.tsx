@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import JoditEditor from "jodit-react";
 import {
   Table,
   TableBody,
@@ -55,11 +56,22 @@ const mockGuides: TextGuide[] = [
   },
 ];
 
-const ManageTextGuides = () => {
+const ManageTextGuides = ({ placeholder }) => {
   const [guides, setGuides] = useState<TextGuide[]>(mockGuides);
   const [selectedGuides, setSelectedGuides] = useState<string[]>([]);
   const [title, setTitle] = useState("");
+
+  const editor = useRef(null);
   const [content, setContent] = useState("");
+  const [textGuide, setTextGuide] = useState<string>("");
+
+  const config = useMemo(
+    () => ({
+      readonly: false, // all options from https://xdsoft.net/jodit/docs/,
+      placeholder: placeholder || "Start typings...",
+    }),
+    [placeholder]
+  );
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -94,14 +106,8 @@ const ManageTextGuides = () => {
 
   const handlePostGuide = () => {
     if (!title.trim() || !content.trim()) return;
-    const newGuide: TextGuide = {
-      id: Date.now().toString(),
-      name: title,
-      author: "Admin",
-      status: "approved",
-      submittedOn: new Date().toISOString().split("T")[0],
-    };
-    setGuides([newGuide, ...guides]);
+    console.log(textGuide);
+
     setTitle("");
     setContent("");
   };
@@ -142,12 +148,14 @@ const ManageTextGuides = () => {
           </div>
           <div className="space-y-2">
             <Label htmlFor="guide-content">Guide Content</Label>
-            <Textarea
-              id="guide-content"
-              placeholder="Write your guide content here..."
-              className="min-h-[200px] resize-y"
+            <JoditEditor
+              ref={editor}
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              config={config}
+              tabIndex={1} // tabIndex of textarea
+              onBlur={(newContent) => setContent(newContent)} // preferred to use only this option to update the content for performance reasons
+              onChange={(newContent) => setTextGuide(newContent)}
+              className="text-black"
             />
           </div>
           <Button onClick={handlePostGuide} className="w-full sm:w-auto">
