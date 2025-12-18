@@ -1,15 +1,73 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { textApi } from "@/api/modules/text";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { BookOpen, Clock } from "lucide-react";
+import { useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 const guides = [
-  { id: 1, title: "Complete Beginner's Guide to Fishkeeping", category: "Beginner", readTime: "15 min", icon: "🐠" },
-  { id: 2, title: "The Ultimate Guide to Water Chemistry", category: "Water Parameters", readTime: "20 min", icon: "💧" },
-  { id: 3, title: "Aquascaping 101: Create Stunning Underwater Landscapes", category: "Aquascaping", readTime: "25 min", icon: "🌿" },
-  { id: 4, title: "Fish Health and Disease Prevention", category: "Health", readTime: "18 min", icon: "🏥" },
-  { id: 5, title: "Setting Up a Planted Aquarium", category: "Plants", readTime: "22 min", icon: "🌱" },
-  { id: 6, title: "Advanced Breeding Techniques", category: "Breeding", readTime: "30 min", icon: "🥚" },
-  { id: 7, title: "Choosing the Right Filter System", category: "Equipment", readTime: "12 min", icon: "⚙️" },
-  { id: 8, title: "Creating a Biotope Aquarium", category: "Advanced", readTime: "28 min", icon: "🌍" },
+  {
+    id: 1,
+    title: "Complete Beginner's Guide to Fishkeeping",
+    category: "Beginner",
+    readTime: "15 min",
+    icon: "🐠",
+  },
+  {
+    id: 2,
+    title: "The Ultimate Guide to Water Chemistry",
+    category: "Water Parameters",
+    readTime: "20 min",
+    icon: "💧",
+  },
+  {
+    id: 3,
+    title: "Aquascaping 101: Create Stunning Underwater Landscapes",
+    category: "Aquascaping",
+    readTime: "25 min",
+    icon: "🌿",
+  },
+  {
+    id: 4,
+    title: "Fish Health and Disease Prevention",
+    category: "Health",
+    readTime: "18 min",
+    icon: "🏥",
+  },
+  {
+    id: 5,
+    title: "Setting Up a Planted Aquarium",
+    category: "Plants",
+    readTime: "22 min",
+    icon: "🌱",
+  },
+  {
+    id: 6,
+    title: "Advanced Breeding Techniques",
+    category: "Breeding",
+    readTime: "30 min",
+    icon: "🥚",
+  },
+  {
+    id: 7,
+    title: "Choosing the Right Filter System",
+    category: "Equipment",
+    readTime: "12 min",
+    icon: "⚙️",
+  },
+  {
+    id: 8,
+    title: "Creating a Biotope Aquarium",
+    category: "Advanced",
+    readTime: "28 min",
+    icon: "🌍",
+  },
 ];
 
 const TextGuides = () => {
@@ -24,12 +82,17 @@ const TextGuides = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {guides.map((guide) => (
-          <Card key={guide.id} className="hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer">
+          <Card
+            key={guide.id}
+            className="hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer"
+          >
             <CardHeader>
               <div className="flex items-start gap-4">
                 <div className="text-4xl">{guide.icon}</div>
                 <div className="flex-1">
-                  <div className="text-xs font-medium text-primary mb-2">{guide.category}</div>
+                  <div className="text-xs font-medium text-primary mb-2">
+                    {guide.category}
+                  </div>
                   <CardTitle className="text-lg mb-2">{guide.title}</CardTitle>
                   <CardDescription className="flex items-center gap-2">
                     <Clock className="h-3 w-3" />

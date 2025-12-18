@@ -1,6 +1,10 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { textApi } from "@/api/modules/text";
+import { toast } from "sonner";
+import DOMPurify from "dompurify";
 
 // Mock data - in a real app, this would come from an API
 const mockGuidesData: Record<string, { title: string; content: string }> = {
@@ -136,10 +140,46 @@ Fish produce ammonia through waste and respiration. In nature, beneficial bacter
 const ViewTextGuide = () => {
   const { textId } = useParams<{ textId: string }>();
   const navigate = useNavigate();
+  const { textIds } = useParams();
+  const [guideTitle, setGuideTitle] = useState("");
+  const [guideContent, setGuideContent] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const guide = textId ? mockGuidesData[textId] : null;
+  useEffect(() => {
+    setIsLoading(true);
+    const getText = async () => {
+      try {
+        const res = await textApi.getTextGuideByid(textIds);
+        setGuideTitle(res.data.title);
+        setGuideContent(DOMPurify.sanitize(res.data.content));
+      } catch (error) {
+        toast.error("Failed to fetch text guide");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  if (!guide) {
+    getText();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-foreground mb-4">
+            Loading Guide...
+          </h1>
+        </div>
+      </div>
+    );
+  }
+
+  if (
+    !guideTitle ||
+    !guideContent ||
+    guideTitle.toString().length === 0 ||
+    guideContent.toString().length === 0
+  ) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
@@ -171,12 +211,15 @@ const ViewTextGuide = () => {
 
       <article className="prose prose-lg dark:prose-invert max-w-none">
         <h1 className="text-2xl md:text-4xl font-bold text-foreground mb-6">
-          {guide.title}
+          {guideTitle}
         </h1>
 
-        <div className="text-foreground/90 whitespace-pre-line leading-relaxed">
-          {guide.content}
-        </div>
+        <div
+          className="text-foreground/90 whitespace-pre-line leading-relaxed"
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(guideContent),
+          }}
+        ></div>
       </article>
     </div>
   );

@@ -1,5 +1,9 @@
 import httpClient from "@/api/axiosSetup";
-import { GetAllTextGuidesResponse, TextGuidePayload } from "../apiTypes";
+import {
+  GetAllTextGuidesResponse,
+  TextGuide,
+  TextGuidePayload,
+} from "../apiTypes";
 
 export const textApi = {
   create: async (data: TextGuidePayload): Promise<any> => {
@@ -18,4 +22,9 @@ export const textApi = {
     );
     return res.data;
   },
+
+  getTextGuideByid: async (id: string) =>
+    httpClient.get<TextGuide>(`/api/textguides/get_text_guide/${id}`, {
+      headers: { useAuth: true },
+    }),
 };

@@ -148,7 +148,7 @@ const App = () => {
               }
             />
             <Route
-              path="/view/text/:textId"
+              path="/view/text/:textIds"
               element={
                 <Layout>
                   <ViewTextGuide />

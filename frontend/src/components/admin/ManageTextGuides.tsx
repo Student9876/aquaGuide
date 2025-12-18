@@ -21,6 +21,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { textApi } from "@/api/modules/text";
 import { toast } from "sonner";
 import { TextGuide } from "@/api/apiTypes";
+import { useNavigate } from "react-router-dom";
 
 interface TextGuides {
   id: string;
@@ -71,6 +72,11 @@ const ManageTextGuides = ({ placeholder }) => {
   const [content, setContent] = useState("");
   const [textGuide, setTextGuide] = useState<string>("");
   const textGuidesArray: TextGuide[] = data?.data || [];
+  const navigate = useNavigate();
+
+  const handleNavigate = (id: string) => {
+    navigate(`/view/text/${id}`);
+  };
 
   const createTextGuideMutation = useMutation({
     mutationFn: textApi.create,
@@ -273,7 +279,12 @@ const ManageTextGuides = ({ placeholder }) => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleNavigate(guide.id)}
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
