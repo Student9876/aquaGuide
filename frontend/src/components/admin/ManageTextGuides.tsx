@@ -16,8 +16,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Eye, Pencil, Check, X, Trash2 } from "lucide-react";
+import { useTextGuide } from "@/hooks/useTextGuide";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { textApi } from "@/api/modules/text";
+import { toast } from "sonner";
+import { TextGuide } from "@/api/apiTypes";
 
-interface TextGuide {
+interface TextGuides {
   id: string;
   name: string;
   author: string;
@@ -25,7 +30,7 @@ interface TextGuide {
   submittedOn: string;
 }
 
-const mockGuides: TextGuide[] = [
+const mockGuides: TextGuides[] = [
   {
     id: "1",
     name: "Beginner's Guide to Freshwater Tanks",
@@ -57,25 +62,51 @@ const mockGuides: TextGuide[] = [
 ];
 
 const ManageTextGuides = ({ placeholder }) => {
-  const [guides, setGuides] = useState<TextGuide[]>(mockGuides);
   const [selectedGuides, setSelectedGuides] = useState<string[]>([]);
   const [title, setTitle] = useState("");
-
+  const [page, setPage] = useState(1);
+  const { data, isLoading, isError } = useTextGuide(page);
   const editor = useRef(null);
+  const queryClient = useQueryClient();
   const [content, setContent] = useState("");
   const [textGuide, setTextGuide] = useState<string>("");
+  const textGuidesArray: TextGuide[] = data?.data || [];
+
+  const createTextGuideMutation = useMutation({
+    mutationFn: textApi.create,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["text-guides"] });
+      toast.success("Text guide created successfully");
+    },
+    onError: () => {
+      toast.error("Failed to create text guide");
+    },
+  });
+
+  const handleCreate = () => {
+    createTextGuideMutation.mutate({
+      title: title,
+      content: textGuide,
+    });
+  };
 
   const config = useMemo(
     () => ({
       readonly: false, // all options from https://xdsoft.net/jodit/docs/,
       placeholder: placeholder || "Start typings...",
+      height: 400,
+      style: {
+        color: "black", // default text color
+        fontFamily: "Arial, sans-serif",
+        fontSize: "14px",
+      },
     }),
     [placeholder]
   );
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedGuides(guides.map((g) => g.id));
+      setSelectedGuides(textGuidesArray.map((g) => g.id));
     } else {
       setSelectedGuides([]);
     }
@@ -91,15 +122,7 @@ const ManageTextGuides = ({ placeholder }) => {
 
   const handleBulkAction = (action: "approve" | "reject" | "delete") => {
     if (action === "delete") {
-      setGuides(guides.filter((g) => !selectedGuides.includes(g.id)));
     } else {
-      setGuides(
-        guides.map((g) =>
-          selectedGuides.includes(g.id)
-            ? { ...g, status: action === "approve" ? "approved" : "rejected" }
-            : g
-        )
-      );
     }
     setSelectedGuides([]);
   };
@@ -158,7 +181,7 @@ const ManageTextGuides = ({ placeholder }) => {
               className="text-black"
             />
           </div>
-          <Button onClick={handlePostGuide} className="w-full sm:w-auto">
+          <Button onClick={handleCreate} className="w-full sm:w-auto">
             Post Guide
           </Button>
         </CardContent>
@@ -210,8 +233,8 @@ const ManageTextGuides = ({ placeholder }) => {
                   <TableHead className="w-12">
                     <Checkbox
                       checked={
-                        selectedGuides.length === guides.length &&
-                        guides.length > 0
+                        selectedGuides.length === textGuidesArray.length &&
+                        textGuidesArray.length > 0
                       }
                       onCheckedChange={handleSelectAll}
                     />
@@ -226,7 +249,7 @@ const ManageTextGuides = ({ placeholder }) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {guides.map((guide) => (
+                {textGuidesArray.map((guide) => (
                   <TableRow key={guide.id} className="border-border">
                     <TableCell>
                       <Checkbox
@@ -237,14 +260,14 @@ const ManageTextGuides = ({ placeholder }) => {
                       />
                     </TableCell>
                     <TableCell className="font-medium max-w-[150px] md:max-w-none truncate">
-                      {guide.name}
+                      {guide.title}
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">
                       {guide.author}
                     </TableCell>
                     <TableCell>{getStatusBadge(guide.status)}</TableCell>
                     <TableCell className="hidden md:table-cell">
-                      {guide.submittedOn}
+                      {guide.createdAt.slice(0, 10)}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">

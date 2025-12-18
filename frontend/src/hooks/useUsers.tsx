@@ -7,6 +7,6 @@ export const useUsers = () => {
     queryKey: ["users"],
     queryFn: authApi.getUsersData,
     staleTime: 5 * 60 * 1000, // 5 mins
-    gcTime: 10 * 60 * 1000,
+    gcTime: 10 * 60 * 1000, //cache time 10 mins
   });
 };
