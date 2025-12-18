@@ -75,8 +75,10 @@ const ManageTextGuides = ({ placeholder }) => {
   const createTextGuideMutation = useMutation({
     mutationFn: textApi.create,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["text-guides"] });
+      queryClient.invalidateQueries({ queryKey: ["texts"] });
       toast.success("Text guide created successfully");
+      setTitle("");
+      setContent("");
     },
     onError: () => {
       toast.error("Failed to create text guide");
