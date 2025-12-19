@@ -141,3 +141,35 @@ export interface UserDetailsResponse {
   title: string;
   users: User[];
 }
+
+export interface SpeciesFormData {
+  common_name: string;
+  scientific_name: string;
+  family?: string;
+  origin?: string;
+  water_type: string;
+  min_temp?: number;
+  max_temp?: number;
+  min_ph?: number;
+  max_ph?: number;
+  min_hardness?: number;
+  max_hardness?: number;
+  diet_type?: string;
+  care_level?: string;
+  temperament?: string;
+  max_size_cm?: number;
+  min_tank_size_liters?: number;
+  diet_info?: string;
+  description?: string;
+  primary_image?: string;
+  breeding_difficulty?: string;
+  breeding_notes?: string;
+  status: string;
+}
+
+export interface AddSpeciesResponse {
+  message: string;
+  fish_id: string;
+  common_name: string;
+  scientific_name: string;
+}
