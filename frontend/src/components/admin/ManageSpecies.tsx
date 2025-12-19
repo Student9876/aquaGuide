@@ -1,114 +1,95 @@
-import {useEffect, useState} from "react";
+import {useState} from "react";
+import {useQuery, useMutation, useQueryClient} from "@tanstack/react-query";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
 import {Badge} from "@/components/ui/badge";
-import {Search, Plus, Eye, Pencil, Trash2, ChevronLeft, ChevronRight} from "lucide-react";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {Search, Plus, Eye, Pencil, Trash2, ChevronLeft, ChevronRight, Loader2} from "lucide-react";
 import AddSpeciesModal from "./AddSpeciesModal";
 import {speciesApi} from "@/api/modules/species";
 import type {SpeciesItem} from "@/api/apiTypes";
 import {toast} from "@/components/ui/use-toast";
 import EditSpeciesModal from "./EditSpeciesModal";
 
-interface Species {
-	id: number;
-	image: string;
-	commonName: string;
-	scientificName: string;
-	family: string;
-	waterType: string;
-	careLevel: string;
-	status: "published" | "draft" | "archived";
-	createdAt: string;
-}
-
-const mockSpecies: Species[] = [
-	{
-		id: 1,
-		image: "https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=100&h=100&fit=crop",
-		commonName: "Clownfish",
-		scientificName: "Amphiprion ocellaris",
-		family: "Pomacentridae",
-		waterType: "Marine",
-		careLevel: "Easy",
-		status: "published",
-		createdAt: "2024-01-15",
-	},
-	{
-		id: 2,
-		image: "https://images.unsplash.com/photo-1520302630591-fd1c66edc19d?w=100&h=100&fit=crop",
-		commonName: "Betta Fish",
-		scientificName: "Betta splendens",
-		family: "Osphronemidae",
-		waterType: "Freshwater",
-		careLevel: "Easy",
-		status: "published",
-		createdAt: "2024-01-12",
-	},
-	{
-		id: 3,
-		image: "https://images.unsplash.com/photo-1571752726703-5e7d1f6a986d?w=100&h=100&fit=crop",
-		commonName: "Neon Tetra",
-		scientificName: "Paracheirodon innesi",
-		family: "Characidae",
-		waterType: "Freshwater",
-		careLevel: "Very Easy",
-		status: "draft",
-		createdAt: "2024-01-10",
-	},
-];
-
 const ManageSpecies = () => {
+	const queryClient = useQueryClient();
 	const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [selectedSpecies, setSelectedSpecies] = useState<SpeciesItem | null>(null);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [waterTypeFilter, setWaterTypeFilter] = useState("all");
 	const [statusFilter, setStatusFilter] = useState("all");
-	const [species, setSpecies] = useState<SpeciesItem[]>([]);
-	const [isLoading, setIsLoading] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
-	const [totalPages, setTotalPages] = useState(1);
-	const [total, setTotal] = useState(0);
+	const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+	const [speciesIdToDelete, setSpeciesIdToDelete] = useState<{id: string; name: string} | null>(null);
 
-	// Fetch species data
-	const fetchSpecies = async (page: number = 1) => {
-		try {
-			setIsLoading(true);
-			const response = await speciesApi.getSpeciesManagement(page);
-			setSpecies(response.data.species);
-			setCurrentPage(response.data.page);
-			setTotalPages(response.data.totalPages);
-			setTotal(response.data.total);
+	// Fetch species data with React Query
+	const {
+		data: speciesData,
+		isLoading,
+		isError,
+		error,
+	} = useQuery({
+		queryKey: ["species", currentPage],
+		queryFn: () => speciesApi.getSpeciesManagement(currentPage),
+		staleTime: 5 * 60 * 1000, // Data stays fresh for 5 minutes
+		gcTime: 10 * 60 * 1000, // Cache for 10 minutes (formerly cacheTime)
+	});
 
-			console.log("Fetched species:", {
-				page: response.data.page,
-				totalPages: response.data.totalPages,
-				total: response.data.total,
-				count: response.data.species.length,
-			});
-		} catch (error) {
-			console.error("Error fetching species:", error);
-			toast({title: "Error", description: "Failed to load species data. Please try again later.", variant: "destructive"});
-		} finally {
-			setIsLoading(false);
-		}
-	};
+	// Delete mutation
+	const deleteMutation = useMutation({
+		mutationFn: (fishId: string) => speciesApi.deleteSpecies(fishId),
+		onSuccess: () => {
+			queryClient.invalidateQueries({queryKey: ["species"]});
+			toast({description: "Species deleted successfully"});
+		},
+		onError: (error) => {
+			toast({description: error?.message || "Failed to delete species"});
+		},
+	});
 
-	useEffect(() => {
-		fetchSpecies(currentPage);
-	}, [currentPage]);
+	const species = speciesData?.data.species || [];
+	const totalPages = speciesData?.data.totalPages || 1;
+	const total = speciesData?.data.total || 0;
 
 	const handleAddModalClose = () => {
 		setIsAddModalOpen(false);
-		fetchSpecies(currentPage);
+		queryClient.invalidateQueries({queryKey: ["species"]});
 	};
 
 	const handleEditModalClose = () => {
 		setIsEditModalOpen(false);
 		setSelectedSpecies(null);
-		fetchSpecies(currentPage);
+		queryClient.invalidateQueries({queryKey: ["species"]});
+	};
+
+	const handleEditClick = (spec: SpeciesItem) => {
+		setSelectedSpecies(spec);
+		setIsEditModalOpen(true);
+	};
+
+	const handleDeleteClick = (fishId: string, commonName: string) => {
+		setSpeciesIdToDelete({id: fishId, name: commonName});
+		setDeleteConfirmOpen(true);
+	};
+
+	const confirmDelete = () => {
+		if (speciesIdToDelete) {
+			deleteMutation.mutate(speciesIdToDelete.id);
+			setDeleteConfirmOpen(false);
+			setSpeciesIdToDelete(null);
+		}
 	};
 
 	const handlePageChange = (newPage: number) => {
@@ -125,7 +106,7 @@ const ManageSpecies = () => {
 		return matchesSearch && matchesWaterType && matchesStatus;
 	});
 
-	const getStatusBadge = (status: Species["status"]) => {
+	const getStatusBadge = (status: SpeciesItem["status"]) => {
 		switch (status) {
 			case "published":
 				return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Published</Badge>;
@@ -133,6 +114,8 @@ const ManageSpecies = () => {
 				return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Draft</Badge>;
 			case "archived":
 				return <Badge className="bg-muted text-muted-foreground border-muted">Archived</Badge>;
+			default:
+				return <Badge>{status}</Badge>;
 		}
 	};
 
@@ -156,6 +139,22 @@ const ManageSpecies = () => {
 		return <Badge className={colors[formattedLevel] || "bg-muted text-muted-foreground"}>{formattedLevel}</Badge>;
 	};
 
+	const formatDate = (dateString: string) => {
+		const date = new Date(dateString);
+		return date.toLocaleDateString("en-US", {year: "numeric", month: "short", day: "numeric"});
+	};
+
+	if (isError) {
+		return (
+			<div className="flex items-center justify-center py-12">
+				<div className="text-center space-y-4">
+					<p className="text-destructive">Error loading species: {error?.message}</p>
+					<Button onClick={() => queryClient.invalidateQueries({queryKey: ["species"]})}>Retry</Button>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="space-y-6">
 			{/* Header with Add Button */}
@@ -166,7 +165,7 @@ const ManageSpecies = () => {
 					Add New Species
 				</Button>
 			</div>
-
+			
 			{/* Filters */}
 			<div className="flex flex-col sm:flex-row gap-4">
 				<div className="relative flex-1">
@@ -201,125 +200,170 @@ const ManageSpecies = () => {
 					</SelectContent>
 				</Select>
 			</div>
-
-			{/* Desktop Table View */}
-			<div className="hidden md:block rounded-lg border border-border overflow-hidden">
-				<Table>
-					<TableHeader>
-						<TableRow className="bg-muted/50 border-border">
-							<TableHead className="text-muted-foreground">Image</TableHead>
-							<TableHead className="text-muted-foreground">Species Info</TableHead>
-							<TableHead className="text-muted-foreground">Water Type</TableHead>
-							<TableHead className="text-muted-foreground">Care Level</TableHead>
-							<TableHead className="text-muted-foreground">Status</TableHead>
-							<TableHead className="text-muted-foreground">Created</TableHead>
-							<TableHead className="text-muted-foreground">Actions</TableHead>
-						</TableRow>
-					</TableHeader>
-					<TableBody>
-						{filteredSpecies.map((species) => (
-							<TableRow key={species.fish_id} className="border-border hover:bg-muted/30">
-								<TableCell>
-									<img src={species.primary_image} alt={species.common_name} className="w-12 h-12 rounded-lg object-cover" />
-								</TableCell>
-								<TableCell>
-									<div className="space-y-1">
-										<p className="font-medium text-foreground">{species.common_name}</p>
-										<p className="text-sm text-muted-foreground italic">{species.scientific_name}</p>
-										<p className="text-xs text-muted-foreground">{species.family}</p>
-									</div>
-								</TableCell>
-								<TableCell>
-									<Badge variant="outline" className="border-primary/50 text-primary">
-										{species.water_type}
-									</Badge>
-								</TableCell>
-								<TableCell>{getCareLevelBadge(species.care_level)}</TableCell>
-								<TableCell>{getStatusBadge(species.status as Species["status"])}</TableCell>
-								<TableCell className="text-muted-foreground">{species.created_at}</TableCell>
-								<TableCell>
-									<div className="flex gap-2">
-										<Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10">
-											<Eye className="w-4 h-4" />
-										</Button>
-										<Button
-											size="sm"
-											variant="ghost"
-											className="h-8 w-8 p-0 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10"
-											onClick={() => {
-												setSelectedSpecies(species);
-												setIsEditModalOpen(true);
-											}}>
-											<Pencil className="w-4 h-4" />
-										</Button>
-										<Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/10">
-											<Trash2 className="w-4 h-4" />
-										</Button>
-									</div>
-								</TableCell>
-							</TableRow>
-						))}
-					</TableBody>
-				</Table>
-			</div>
-
-			{/* Mobile/Tablet Card View */}
-			<div className="md:hidden space-y-4">
-				{filteredSpecies.map((species) => (
-					<div key={species.fish_id} className="bg-card border border-border rounded-lg p-4 space-y-4">
-						<div className="flex items-start gap-4">
-							<img src={species.primary_image} alt={species.common_name} className="w-16 h-16 rounded-lg object-cover" />
-							<div className="flex-1 space-y-1">
-								<p className="font-medium text-foreground">{species.common_name}</p>
-								<p className="text-sm text-muted-foreground italic">{species.scientific_name}</p>
-								<p className="text-xs text-muted-foreground">{species.family}</p>
-							</div>
-						</div>
-						<div className="flex flex-wrap gap-2">
-							<Badge variant="outline" className="border-primary/50 text-primary">
-								{species.water_type}
-							</Badge>
-							{getCareLevelBadge(species.care_level)}
-							{getStatusBadge(species.status as Species["status"])}
-						</div>
-						<div className="flex items-center justify-between pt-2 border-t border-border">
-							<span className="text-sm text-muted-foreground">Created: {species.created_at}</span>
-							<div className="flex gap-2">
-								<Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10">
-									<Eye className="w-4 h-4" />
-								</Button>
-								<Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10">
-									<Pencil className="w-4 h-4" />
-								</Button>
-								<Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/10">
-									<Trash2 className="w-4 h-4" />
-								</Button>
-							</div>
-						</div>
+			{/* Loading State */}
+			{isLoading ? (
+				<div className="flex items-center justify-center py-12">
+					<Loader2 className="w-8 h-8 animate-spin text-primary" />
+				</div>
+			) : (
+				<>
+					{/* Desktop Table View */}
+					<div className="hidden md:block rounded-lg border border-border overflow-hidden">
+						<Table>
+							<TableHeader>
+								<TableRow className="bg-muted/50 border-border">
+									<TableHead className="text-muted-foreground">Image</TableHead>
+									<TableHead className="text-muted-foreground">Species Info</TableHead>
+									<TableHead className="text-muted-foreground">Water Type</TableHead>
+									<TableHead className="text-muted-foreground">Care Level</TableHead>
+									<TableHead className="text-muted-foreground">Status</TableHead>
+									<TableHead className="text-muted-foreground">Created</TableHead>
+									<TableHead className="text-muted-foreground">Actions</TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								{filteredSpecies.length === 0 ? (
+									<TableRow>
+										<TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+											No species found matching your filters.
+										</TableCell>
+									</TableRow>
+								) : (
+									filteredSpecies.map((spec) => (
+										<TableRow key={spec.fish_id} className="border-border hover:bg-muted/30">
+											<TableCell>
+												<img
+													src={spec.primary_image || "https://via.placeholder.com/50?text=No+Image"}
+													alt={spec.common_name}
+													className="w-12 h-12 rounded-lg object-cover"
+													onError={(e) => {
+														e.currentTarget.src = "https://via.placeholder.com/50?text=No+Image";
+													}}
+												/>
+											</TableCell>
+											<TableCell>
+												<div className="space-y-1">
+													<p className="font-medium text-foreground">{spec.common_name}</p>
+													<p className="text-sm text-muted-foreground italic">{spec.scientific_name}</p>
+													<p className="text-xs text-muted-foreground">{spec.family || "N/A"}</p>
+												</div>
+											</TableCell>
+											<TableCell>
+												<Badge variant="outline" className="border-primary/50 text-primary capitalize">
+													{spec.water_type}
+												</Badge>
+											</TableCell>
+											<TableCell>{getCareLevelBadge(spec.care_level)}</TableCell>
+											<TableCell>{getStatusBadge(spec.status as SpeciesItem["status"])}</TableCell>
+											<TableCell className="text-muted-foreground">{formatDate(spec.created_at)}</TableCell>
+											<TableCell>
+												<div className="flex gap-2">
+													<Button
+														size="sm"
+														variant="ghost"
+														className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10">
+														<Eye className="w-4 h-4" />
+													</Button>
+													<Button
+														size="sm"
+														variant="ghost"
+														onClick={() => handleEditClick(spec)}
+														className="h-8 w-8 p-0 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10">
+														<Pencil className="w-4 h-4" />
+													</Button>
+													<Button
+														size="sm"
+														variant="ghost"
+														onClick={() => handleDeleteClick(spec.fish_id, spec.common_name)}
+														disabled={deleteMutation.isPending}
+														className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/10">
+														<Trash2 className="w-4 h-4" />
+													</Button>
+												</div>
+											</TableCell>
+										</TableRow>
+									))
+								)}
+							</TableBody>
+						</Table>
 					</div>
-				))}
-			</div>
 
-			{filteredSpecies.length === 0 && <div className="text-center py-12 text-muted-foreground">No species found matching your filters.</div>}
-
+					{/* Mobile/Tablet Card View */}
+					<div className="md:hidden space-y-4">
+						{filteredSpecies.length === 0 ? (
+							<div className="text-center py-12 text-muted-foreground">No species found matching your filters.</div>
+						) : (
+							filteredSpecies.map((spec) => (
+								<div key={spec.fish_id} className="bg-card border border-border rounded-lg p-4 space-y-4">
+									<div className="flex items-start gap-4">
+										<img
+											src={spec.primary_image || "https://via.placeholder.com/64?text=No+Image"}
+											alt={spec.common_name}
+											className="w-16 h-16 rounded-lg object-cover"
+											onError={(e) => {
+												e.currentTarget.src = "https://via.placeholder.com/64?text=No+Image";
+											}}
+										/>
+										<div className="flex-1 space-y-1">
+											<p className="font-medium text-foreground">{spec.common_name}</p>
+											<p className="text-sm text-muted-foreground italic">{spec.scientific_name}</p>
+											<p className="text-xs text-muted-foreground">{spec.family || "N/A"}</p>
+										</div>
+									</div>
+									<div className="flex flex-wrap gap-2">
+										<Badge variant="outline" className="border-primary/50 text-primary capitalize">
+											{spec.water_type}
+										</Badge>
+										{getCareLevelBadge(spec.care_level)}
+										{getStatusBadge(spec.status as SpeciesItem["status"])}
+									</div>
+									<div className="flex items-center justify-between pt-2 border-t border-border">
+										<span className="text-sm text-muted-foreground">Created: {formatDate(spec.created_at)}</span>
+										<div className="flex gap-2">
+											<Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10">
+												<Eye className="w-4 h-4" />
+											</Button>
+											<Button
+												size="sm"
+												variant="ghost"
+												onClick={() => handleEditClick(spec)}
+												className="h-8 w-8 p-0 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10">
+												<Pencil className="w-4 h-4" />
+											</Button>
+											<Button
+												size="sm"
+												variant="ghost"
+												onClick={() => handleDeleteClick(spec.fish_id, spec.common_name)}
+												disabled={deleteMutation.isPending}
+												className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/10">
+												<Trash2 className="w-4 h-4" />
+											</Button>
+										</div>
+									</div>
+								</div>
+							))
+						)}
+					</div>
+				</>
+			)}
 			{/* Pagination Controls */}
 			{!isLoading && totalPages > 1 && (
 				<div className="flex items-center justify-between border-t border-border pt-4">
 					<div className="text-sm text-muted-foreground">
-						Showing page {currentPage} of {totalPages}
+						Showing page {currentPage} of {totalPages} ({total} total)
 					</div>
 					<div className="flex items-center gap-2">
 						<Button
 							variant="outline"
 							size="sm"
 							onClick={() => handlePageChange(currentPage - 1)}
-							disabled={currentPage === 1}
+							disabled={currentPage === 1 || isLoading}
 							className="border-border">
 							<ChevronLeft className="w-4 h-4 mr-1" />
 							Previous
 						</Button>
 
-						{/* Page Numbers */}
+						{/* page numbers */}
 						<div className="hidden sm:flex items-center gap-1">
 							{Array.from({length: Math.min(5, totalPages)}, (_, i) => {
 								let pageNum;
@@ -339,6 +383,7 @@ const ManageSpecies = () => {
 										variant={currentPage === pageNum ? "default" : "outline"}
 										size="sm"
 										onClick={() => handlePageChange(pageNum)}
+										disabled={isLoading}
 										className={currentPage === pageNum ? "bg-primary" : "border-border"}>
 										{pageNum}
 									</Button>
@@ -350,7 +395,7 @@ const ManageSpecies = () => {
 							variant="outline"
 							size="sm"
 							onClick={() => handlePageChange(currentPage + 1)}
-							disabled={currentPage === totalPages}
+							disabled={currentPage === totalPages || isLoading}
 							className="border-border">
 							Next
 							<ChevronRight className="w-4 h-4 ml-1" />
@@ -358,9 +403,32 @@ const ManageSpecies = () => {
 					</div>
 				</div>
 			)}
-
+			{!isLoading && filteredSpecies.length === 0 && (
+				<div className="text-center py-12 text-muted-foreground">No species found matching your filters.</div>
+			)}
 			<AddSpeciesModal isOpen={isAddModalOpen} onClose={() => handleAddModalClose()} />
 			<EditSpeciesModal isOpen={isEditModalOpen} onClose={() => handleEditModalClose()} species={selectedSpecies} />
+			{/* Delete Confirmation Dialog */}
+			<AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+				<AlertDialogContent className="bg-card border-border">
+					<AlertDialogHeader>
+						<AlertDialogTitle className="text-foreground">Are you sure?</AlertDialogTitle>
+						<AlertDialogDescription className="text-muted-foreground">
+							This action cannot be undone. This will permanently delete the species{" "}
+							<span className="font-semibold text-foreground">"{speciesIdToDelete?.name}"</span> from the database.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel className="border-border">Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={confirmDelete}
+							disabled={deleteMutation.isPending}
+							className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+							{deleteMutation.isPending ? "Deleting..." : "Delete"}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>{" "}
 		</div>
 	);
 };

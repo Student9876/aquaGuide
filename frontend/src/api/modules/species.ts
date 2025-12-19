@@ -2,6 +2,7 @@ import type { SpeciesFormData, AddSpeciesResponse, GetSpeciesManagementResponse 
 
 import httpClient from '@/api/axiosSetup';
 import { add } from 'date-fns';
+import { spec } from 'node:test/reporters';
 
 export const speciesApi = {
     addSpecies: (data: SpeciesFormData) =>
@@ -16,6 +17,11 @@ export const speciesApi = {
 
     updateSpecies: (speciesId: string, data: SpeciesFormData) =>
         httpClient.put<AddSpeciesResponse>(`/api/manage_species/species-management/${speciesId}`, data, {
+            headers: { useAuth: true },
+        }),
+
+    deleteSpecies: (speciesId: string) =>
+        httpClient.delete<{ message: string }>(`/api/manage_species/species-management/${speciesId}`, {
             headers: { useAuth: true },
         }),
 
