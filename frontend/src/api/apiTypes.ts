@@ -154,12 +154,19 @@ export interface TextGuide {
   created_at: string;
   updated_at: string;
   status: "approved" | "pending" | "rejected"; // you can adjust based on your possible statuses
-  author: string;
+  author: author;
   rejection_justification?: string | null;
   rejection_requested_by?: string | null;
   rejection_status?: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface author {
+  id: string;
+  userid: string;
+  email: string;
+  role: "admin" | "user" | "support";
 }
 
 export interface Pagination {
