@@ -1,5 +1,6 @@
 import Comments from './community_forum_comment.model.js';
 import CommunityForum from "./community_forum_model.js";
+import CommunityChat from "./community_chat.model.js";
 import User from "./user.model.js";
 
 CommunityForum.hasMany(Comments, { as: "Comments", foreignKey: "forum_id" });
@@ -9,5 +10,15 @@ Comments.belongsTo(User, {
     onDelete: "CASCADE"
 });
 User.hasMany(Comments, {foreignkey: "user_id"})
+
+// Community Chat associations
+User.hasMany(CommunityChat, {
+    foreignKey: "user_id",
+    onDelete: "CASCADE",
+});
+CommunityChat.belongsTo(User, {
+    foreignKey: "user_id",
+    as: "User",
+});
 
 export default function setupAssociations() { }
