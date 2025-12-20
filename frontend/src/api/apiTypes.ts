@@ -142,6 +142,84 @@ export interface UserDetailsResponse {
   users: User[];
 }
 
+export interface TextGuidePayload {
+  title: string;
+  content: string;
+}
+
+export interface TextGuide {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  status: "approved" | "pending" | "rejected"; // you can adjust based on your possible statuses
+  author: author;
+  rejection_justification?: string | null;
+  rejection_requested_by?: string | null;
+  rejection_status?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface author {
+  id: string;
+  userid: string;
+  email: string;
+  role: "admin" | "user" | "support";
+}
+
+export interface Pagination {
+  total_items: number;
+  current_page: number;
+  totalPages: number;
+  pageSize: number;
+}
+
+export interface GetAllTextGuidesResponse {
+  data: TextGuide[]; // array of guides
+  pagination: Pagination; // pagination info
+}
+
+export interface TextGuidePayload {
+  title: string;
+  content: string;
+}
+
+export interface TextGuide {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  status: "approved" | "pending" | "rejected"; // you can adjust based on your possible statuses
+  author: author;
+  rejection_justification?: string | null;
+  rejection_requested_by?: string | null;
+  rejection_status?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface author {
+  id: string;
+  userid: string;
+  email: string;
+  role: "admin" | "user" | "support";
+}
+
+export interface Pagination {
+  total_items: number;
+  current_page: number;
+  totalPages: number;
+  pageSize: number;
+}
+
+export interface GetAllTextGuidesResponse {
+  data: TextGuide[]; // array of guides
+  pagination: Pagination; // pagination info
+}
+
 
 export interface CommunityForum {
   id: string;

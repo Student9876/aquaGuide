@@ -5,7 +5,7 @@ import {
     getUserMessages,
     getChatStatistics,
 } from "../controllers/community_chat.controller.js";
-import { isAuthenticated } from "../middleware/auth.middleware.js";
+import { protectRoute } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
@@ -20,8 +20,8 @@ router.get("/recent", getRecentMessages);
 router.get("/stats", getChatStatistics);
 
 // Protected routes
-router.get("/", isAuthenticated, getAllMessages);
-router.get("/:userId", isAuthenticated, getUserMessages);
+router.get("/", protectRoute, getAllMessages);
+router.get("/:userId", protectRoute, getUserMessages);
 
 export default router;
 

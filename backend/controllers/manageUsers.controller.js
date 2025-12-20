@@ -1,6 +1,6 @@
 
 import User from '../models/user.model.js'; // Adjust the path to your User model
-
+import { Op, fn, col, where } from "sequelize";
 // Helper function to send status messages (like Flask's flash)
 const sendResponseAndRedirect = (res, success, message, redirectPath = '/admin/manage-users') => {
     // In a REST API, you'd usually just send JSON. 
@@ -26,35 +26,47 @@ const assertCanActOnTargetAdmin = (currentUser, targetUser) => {
 
 // GET /manage-users
 export const manageUsers = async (req, res, next) => {
-    try {
-        const statusFilter = req.query.status;
-        const validStatuses = ['active', 'inactive', 'locked'];
-        
-        // Sequelize query object
-        let queryOptions = {
-            order: [['createdAt', 'ASC']],
-            where: {}
-        };
-        
-        let pageTitle = "Manage All Users";
+  try {
+    const statusFilter = req.query.status;
+    const validStatuses = ["active", "inactive", "locked"];
 
-        if (validStatuses.includes(statusFilter)) {
-            // Filter by the 'status' column (assuming your User model has a 'status' column)
-            queryOptions.where.status = statusFilter;
-            pageTitle = `Manage ${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)} Users`;
-        }
-        
-        const usersToDisplay = await User.findAll(queryOptions);
+    // pagination
+    const page = parseInt(req.query.page) || 1;
+    const per_page = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * per_page;
 
-        // In a real Express application rendering HTML, you'd use:
-        // return res.render('admin/manage_users.html', { users: usersToDisplay, title: pageTitle });
-        
-        // For a JSON API, we return the data:
-        return res.json({ title: pageTitle, users: usersToDisplay });
+    let queryOptions = {
+      order: [["createdAt", "ASC"]],
+      where: {},
+      limit: per_page,
+      offset,
+    };
 
-    } catch (error) {
-        next(error); // Pass the error to the Express error handler
+    let pageTitle = "Manage All Users";
+
+    if (validStatuses.includes(statusFilter)) {
+      queryOptions.where.status = statusFilter;
+      pageTitle = `Manage ${
+        statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)
+      } Users`;
     }
+
+    // find + count for pagination
+    const { count, rows } = await User.findAndCountAll(queryOptions);
+
+    return res.json({
+      title: pageTitle,
+      users: rows,
+      pagination: {
+        total_items: count,
+        current_page: page,
+        totalPages: Math.ceil(count / per_page),
+        pageSize: per_page,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 // POST /user/:id/activate
@@ -267,5 +279,59 @@ export const deleteUser = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(err.status || 500).json({ message: err.message || "Server error" });
+  }
+};
+
+
+export const searchUser = async (req, res, next) => {
+  try {
+    const { userName } = req.query;
+    const currentUserId = req.user.id;
+
+    const page = parseInt(req.query.page) || 1;
+    const per_page = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * per_page;
+
+    if (!userName || !userName.trim()) {
+      return res.status(400).json({
+        message: "Search query is required",
+      });
+    }
+
+    const searchValue = `%${userName.toLowerCase()}%`;
+
+    const { count, rows } = await User.findAndCountAll({
+      where: {
+        [Op.and]: [
+          {
+            [Op.or]: [
+              where(fn("LOWER", col("userid")), {
+                [Op.like]: searchValue,
+              }),
+            ],
+          },
+          {
+            id: { [Op.ne]: currentUserId },
+          },
+        ],
+      },
+      attributes: ["id", "userid", "email", "role", "createdAt"],
+      limit: per_page,
+      offset,
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.status(200).json({
+      data: rows,
+      pagination: {
+        total_items: count,
+        current_page: page,
+        totalPages: Math.ceil(count / per_page),
+        pageSize: per_page,
+      },
+    });
+  } catch (error) {
+    console.error("User search error:", error);
+    next(error);
   }
 };
