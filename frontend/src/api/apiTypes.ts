@@ -212,3 +212,18 @@ export interface SpeciesItem {
   created_at: string;
   updated_at: string;
 }
+
+export interface SearchSpeciesParams {
+    query?: string;
+    waterType?: string;
+    careLevel?: string;
+    status?: string;
+    page?: number;
+    limit?: number;
+}
+
+export interface GetSearchResponse {
+  query: string;
+  count: number;
+  results: SpeciesItem[];
+}

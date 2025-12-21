@@ -1,6 +1,8 @@
-import type { SpeciesFormData, AddSpeciesResponse, GetSpeciesManagementResponse } from '@/api/apiTypes';
+import type { SpeciesFormData, AddSpeciesResponse, GetSpeciesManagementResponse, SearchSpeciesParams, GetSearchResponse } from '@/api/apiTypes';
 
 import httpClient from '@/api/axiosSetup';
+
+
 import { add } from 'date-fns';
 import { spec } from 'node:test/reporters';
 
@@ -25,5 +27,17 @@ export const speciesApi = {
             headers: { useAuth: true },
         }),
 
+    searchSpecies: (params: SearchSpeciesParams) => {
+        const queryParams = new URLSearchParams();
+        if (params.query) queryParams.append('q', params.query);
+        if (params.waterType) queryParams.append('water_type', params.waterType);
+        if (params.status) queryParams.append('status', params.status);
+        if (params.page) queryParams.append('page', params.page.toString());
+        if (params.limit) queryParams.append('limit', params.limit.toString());
 
+
+        return httpClient.get<GetSearchResponse>(`/api/public/species/search?${queryParams.toString()}`, {
+            headers: { useAuth: true },
+        });
+    },
 };

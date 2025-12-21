@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import {useQuery, useMutation, useQueryClient} from "@tanstack/react-query";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
@@ -15,12 +15,13 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {Search, Plus, Eye, Pencil, Trash2, ChevronLeft, ChevronRight, Loader2} from "lucide-react";
+import {Search, Plus, Eye, Pencil, Trash2, ChevronLeft, ChevronRight, Loader2, X} from "lucide-react";
 import AddSpeciesModal from "./AddSpeciesModal";
 import {speciesApi} from "@/api/modules/species";
 import type {SpeciesItem} from "@/api/apiTypes";
 import {toast} from "@/components/ui/use-toast";
 import EditSpeciesModal from "./EditSpeciesModal";
+import {useDebounce} from "@/hooks/useDebounce";
 
 const ManageSpecies = () => {
 	const queryClient = useQueryClient();
@@ -34,6 +35,12 @@ const ManageSpecies = () => {
 	const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 	const [speciesIdToDelete, setSpeciesIdToDelete] = useState<{id: string; name: string} | null>(null);
 
+	// Debounce search query with 500ms delay
+	const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
+	// Determine if we should use search or normal fetch
+	const shouldSearch = debouncedSearchQuery || waterTypeFilter !== "all" || statusFilter !== "all";
+
 	// Fetch species data with React Query
 	const {
 		data: speciesData,
@@ -41,11 +48,28 @@ const ManageSpecies = () => {
 		isError,
 		error,
 	} = useQuery({
-		queryKey: ["species", currentPage],
-		queryFn: () => speciesApi.getSpeciesManagement(currentPage),
+		queryKey: ["species", currentPage, debouncedSearchQuery, waterTypeFilter, statusFilter],
+		queryFn: () => {
+			if (shouldSearch) {
+				return speciesApi.searchSpecies({
+					query: debouncedSearchQuery,
+					waterType: waterTypeFilter !== "all" ? waterTypeFilter : undefined,
+					status: statusFilter !== "all" ? statusFilter : undefined,
+					page: currentPage,
+					limit: 10, // Adjust the limit as needed
+				});
+			} else {
+				return speciesApi.getSpeciesManagement(currentPage);
+			}
+		},
 		staleTime: 5 * 60 * 1000, // Data stays fresh for 5 minutes
 		gcTime: 10 * 60 * 1000, // Cache for 10 minutes (formerly cacheTime)
 	});
+
+	// Reset to page 1 when search/filters change
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [debouncedSearchQuery, waterTypeFilter, statusFilter]);
 
 	// Delete mutation
 	const deleteMutation = useMutation({
@@ -59,10 +83,17 @@ const ManageSpecies = () => {
 		},
 	});
 
-	const species = speciesData?.data.species || [];
-	const totalPages = speciesData?.data.totalPages || 1;
-	const total = speciesData?.data.total || 0;
+	// Handle different response structures based on API used
+	const species = shouldSearch ? speciesData?.data.results || [] : speciesData?.data.species || [];
 
+	// For search API, we don't have totalPages, so calculate it
+	const totalPages = shouldSearch
+		? 1 // Search API doesn't paginate, returns all results
+		: speciesData?.data.totalPages || 1;
+
+	const total = shouldSearch ? speciesData?.data.count || 0 : speciesData?.data.total || 0;
+
+	
 	const handleAddModalClose = () => {
 		setIsAddModalOpen(false);
 		queryClient.invalidateQueries({queryKey: ["species"]});
@@ -165,17 +196,23 @@ const ManageSpecies = () => {
 					Add New Species
 				</Button>
 			</div>
-			
 			{/* Filters */}
 			<div className="flex flex-col sm:flex-row gap-4">
 				<div className="relative flex-1">
 					<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
 					<Input
-						placeholder="Search by name..."
+						placeholder="Search by name, scientific name, or family..."
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 						className="pl-10 bg-card border-border"
 					/>
+					{searchQuery && (
+						<button
+							onClick={() => setSearchQuery("")}
+							className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+							<X className="w-4 h-4" />
+						</button>
+					)}
 				</div>
 				<Select value={waterTypeFilter} onValueChange={setWaterTypeFilter}>
 					<SelectTrigger className="w-full sm:w-[180px] bg-card border-border">
