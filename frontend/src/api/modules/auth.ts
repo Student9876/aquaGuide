@@ -10,6 +10,7 @@ import {
   UserDetailsResponse,
   RoleResponse,
   Guest,
+  UserSummaryStatsResponse,
 } from "@/api/apiTypes";
 
 export const authApi = {
@@ -115,5 +116,16 @@ export const authApi = {
 
   createGuest: async () => {
     const res = await httpClient.post<Guest>(`/api/auth/guestCreate`, {});
+  },
+
+  getUserSummary: async (): Promise<UserSummaryStatsResponse> => {
+    const res = await httpClient.get<UserSummaryStatsResponse>(
+      "/api/manage_users/stats/user-summary",
+      {
+        headers: { useAuth: true },
+      }
+    );
+
+    return res.data;
   },
 };
