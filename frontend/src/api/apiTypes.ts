@@ -274,3 +274,15 @@ export interface GetSearchResponse {
   count: number;
   results: SpeciesItem[];
 }
+export interface UserSummaryStatsResponse {
+  success: true;
+  data: {
+    total_registered_users: number;
+    inactive_users: number;
+    active_users: number;
+    locked_users: number;
+    support_users: number;
+    admin_users: number;
+    guest_users: number;
+  };
+}
