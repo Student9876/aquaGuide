@@ -13,6 +13,7 @@ export const getSpeciesDictionary = async (req, res) => {
     const water_type = req.query.water_type || "";
     const care_level = req.query.care_level || "";
     const category = req.query.category || "";
+    const status = req.query.status || "published";
 
     const where = { status: "published" };
 
@@ -33,6 +34,7 @@ export const getSpeciesDictionary = async (req, res) => {
     // ⚙️ Filters
     if (water_type) where.water_type = water_type;
     if (care_level) where.care_level = care_level;
+    if(status) where.status = status;
     if (category === "compatibility") {
       where.compatibility_notes = { [Op.not]: null };
     }
