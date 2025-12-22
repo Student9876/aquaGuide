@@ -13,8 +13,9 @@ export const getSpeciesDictionary = async (req, res) => {
     const water_type = req.query.water_type || "";
     const care_level = req.query.care_level || "";
     const category = req.query.category || "";
+    const status = req.query.status || "";
 
-    const where = { status: "published" };
+    const where = { status: "" };
 
     // 🔍 Search filter
     if (search) {
@@ -27,6 +28,7 @@ export const getSpeciesDictionary = async (req, res) => {
         { diet_info: { [Op.iLike]: `%${search}%` } },
         { compatibility_notes: { [Op.iLike]: `%${search}%` } },
         { breeding_notes: { [Op.iLike]: `%${search}%` } },
+
       ];
     }
 
@@ -36,6 +38,7 @@ export const getSpeciesDictionary = async (req, res) => {
     if (category === "compatibility") {
       where.compatibility_notes = { [Op.not]: null };
     }
+    if (status) where.status = status;
 
     // 📦 Pagination query
     const { count, rows: species } = await SpeciesDictionary.findAndCountAll({
