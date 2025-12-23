@@ -9,40 +9,37 @@ import { useState } from "react";
 
 
 const CommunityForum = () => {
-  const [pageNumber,setPageNumber]= useState(1);
+  const [pageNumber, setPageNumber] = useState(1);
 
-  const{
-  data,
-  isLoading,
-  isError,
-  }= useCommunityForumPublic(pageNumber);
+  const { data, isLoading, isError } = useCommunityForumPublic(pageNumber);
+
+  const forumPosts = data?.data ?? [];
+  const totalPages = data?.pagination?.total_pages ?? 1;
 
   const handleNextPage = () => {
-    setPageNumber((prevPage) => prevPage + 1);
-  }
+    if (pageNumber < totalPages) setPageNumber((prev) => prev + 1);
+  };
 
   const handlePrevPage = () => {
-    setPageNumber((prevPage) => Math.max(prevPage - 1, 1));
-  }
+    setPageNumber((prev) => Math.max(prev - 1, 1));
+  };
 
-  const forumPosts = data?.data?? [];
-
-  if (isLoading) return <div>Loading...</div>;
-  if (isError) return <div>Error</div>;
+  if (isLoading) return <div>Loading posts...</div>;
+  if (isError) return <div className="text-red-600">Failed to load posts. Please try again later.</div>;
 
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="mb-6 md:mb-8">
         <h1 className="text-3xl sm:text-4xl font-bold mb-4">Community Forum</h1>
         <p className="text-lg sm:text-xl text-muted-foreground mb-6">
-          Ask questions, share advice, and showcase your aquariums! Join discussions with other hobbyists – friendly, helpful, and all about fishkeeping.
+          Ask questions, share advice, and showcase your aquariums! Join discussions with other hobbyists.
         </p>
         <Button variant="ocean" size="lg" className="w-full sm:w-auto">Start a Discussion</Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-3 space-y-4">
-          {forumPosts.map((post) => (
+          {forumPosts.map(post => (
             <Card key={post.id} className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardHeader>
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -50,9 +47,7 @@ const CommunityForum = () => {
                     <CardTitle className="text-lg sm:text-xl hover:text-primary transition-colors">
                       {post.title}
                     </CardTitle>
-                    <CardDescription className="mt-2">
-                      Posted by {post.creator_id}
-                    </CardDescription>
+                    <CardDescription className="mt-2">Posted by {post.Creator_Username}</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -60,35 +55,26 @@ const CommunityForum = () => {
                 <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" />
-                    <span className="hidden sm:inline">{post.replies} replies</span>
-                    <span className="sm:hidden">{post.replies}</span>
+                    <span className="hidden sm:inline">{post.Total_Comments} replies</span>
+                    <span className="sm:hidden">{post.Total_Comments}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <ThumbsUp className="h-4 w-4" />
-                    <span className="hidden sm:inline">{post.likes} likes</span>
-                    <span className="sm:hidden">{post.likes}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Eye className="h-4 w-4" />
-                    <span className="hidden sm:inline">{post.views} views</span>
-                    <span className="sm:hidden">{post.views}</span>
+                    <span className="hidden sm:inline">{post.likes.length} likes</span>
+                    <span className="sm:hidden">{post.likes.length}</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
-        <div className="flex justify-between mt-6">
-        <Button
-          onClick={handlePrevPage}
-          disabled={pageNumber === 1}
-          variant="secondary"
-        >
-          Previous
-        </Button>
-        <Button onClick={handleNextPage} variant="default">
-          Next
-        </Button>
+        <div className="flex justify-between mt-6 lg:col-span-3">
+          <Button onClick={handlePrevPage} disabled={pageNumber === 1} variant="secondary">
+            Previous
+          </Button>
+          <Button onClick={handleNextPage} disabled={pageNumber >= totalPages} variant="default">
+            Next
+          </Button>
         </div>
       </div>
     </div>

@@ -107,8 +107,8 @@ export const get_approved_community_forum = async (req, res) => {
         res.status(200).json({
             data: rows,
             pagination: {
-                total_items: count,
-                total_pages: Math.ceil(count / limit),
+                total_items: count.length,
+                total_pages: Math.ceil(count.length / limit),
                 page_size: limit
             }
         });
