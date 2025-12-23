@@ -5,25 +5,27 @@ import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {Search} from "lucide-react";
 import speciesIcon from "@/assets/logo_dict.png";
+import {Loader2} from "lucide-react";
 
 import {useQuery} from "@tanstack/react-query";
 import {speciesApi} from "@/api/modules/species";
 import type {SpeciesItem, SearchSpeciesParams} from "@/api/apiTypes";
 
 const speciesCategories = [
-	{name: "Aquatic Plants", position: "top-left"},
-	{name: "Brackish Fish", position: "left"},
-	{name: "Marine Fish", position: "bottom-left"},
-	{name: "Freshwater Fish", position: "bottom"},
+	{name: "Aquatic Plants", position: "top-left", type: "aquaticplants"},
+	{name: "Brackish Fish", position: "left", type: "brackish"},
+	{name: "Marine Fish", position: "bottom-left", type: "marine"},
+	{name: "Freshwater Fish", position: "bottom", type: "freshwater"},
 ];
 
 const careCategories = [
-	{name: "Very Easy Care", position: "top-right"},
-	{name: "Easy Care", position: "right-top"},
-	{name: "Moderate Care", position: "right"},
-	{name: "Difficult Care", position: "right-bottom"},
-	{name: "Expert Care", position: "bottom-right"},
+    {name: "Very Easy Care", position: "top-right", type: "very_easy"},
+    {name: "Easy Care", position: "right-top", type: "easy"},
+    {name: "Moderate Care", position: "right", type: "moderate"},
+    {name: "Difficult Care", position: "right-bottom", type: "difficult"},
+    {name: "Expert Care", position: "bottom-right", type: "expert"},
 ];
+
 
 const SpeciesDictionary = () => {
 	const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -37,20 +39,25 @@ const SpeciesDictionary = () => {
 		page,
 		limit: 20,
 	};
+
 	if (selectedCategory) {
-		// You may want to map category names to waterType/careLevel here
-		// Example: if (speciesCategories.map(c => c.name).includes(selectedCategory)) params.waterType = selectedCategory;
-		// if (careCategories.map(c => c.name).includes(selectedCategory)) params.careLevel = selectedCategory;
-		// For now, just send as waterType for demo:
-		params.waterType = selectedCategory;
-	}
+    const speciesType = speciesCategories.find(c => c.type === selectedCategory);
+    const careType = careCategories.find(c => c.type === selectedCategory);
+    
+	if (speciesType) {
+        params.waterType = selectedCategory;
+    }
+    if (careType) {
+        params.careLevel = selectedCategory;
+    }
+}
 	if (searchTerm) params.query = searchTerm;
 
 	const {data, isLoading, isError} = useQuery({
 		queryKey: ["species-dictionary", params],
 		queryFn: () => speciesApi.searchSpecies(params),
-		keepPreviousData: true,
 		staleTime: 5 * 60 * 1000, // 5 minutes
+		gcTime: 10 * 60 * 1000, 
 	});
 
 	// Print the received data for debugging
@@ -118,7 +125,7 @@ const SpeciesDictionary = () => {
 								key={category.name}
 								variant={selectedCategory === category.name ? "default" : "outline"}
 								className={`${getPositionClasses(category.position)} whitespace-nowrap text-xs sm:text-lg px-3 py-2 sm:px-4 sm:py-2 z-20`}
-								onClick={() => setSelectedCategory(selectedCategory === category.name ? null : category.name)}>
+								onClick={() => setSelectedCategory(selectedCategory === category.type ? null : category.type)}>
 								{category.name}
 							</Button>
 						))}
@@ -127,9 +134,9 @@ const SpeciesDictionary = () => {
 						{careCategories.map((category) => (
 							<Button
 								key={category.name}
-								variant={selectedCategory === category.name ? "default" : "outline"}
+								variant={selectedCategory === category.type ? "default" : "outline"}
 								className={`${getPositionClasses(category.position)} whitespace-nowrap text-xs sm:text-lg px-3 py-2 sm:px-4 sm:py-2 z-20`}
-								onClick={() => setSelectedCategory(selectedCategory === category.name ? null : category.name)}>
+								onClick={() => setSelectedCategory(selectedCategory === category.type ? null : category.type)}>
 								{category.name}
 							</Button>
 						))}
@@ -161,42 +168,11 @@ const SpeciesDictionary = () => {
 				)}
 			</div>
 
-			{/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-				{speciesArray.map((fish) => (
-					<Card key={fish.id} className="hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer">
-						<CardHeader>
-							<div className="text-5xl mb-4 text-center">{fish.icon}</div>
-							<CardTitle className="text-center">{fish.name}</CardTitle>
-							<CardDescription className="text-center">
-								<Badge variant="secondary" className="mt-2">
-									{fish.type}
-								</Badge>
-							</CardDescription>
-						</CardHeader>
-						<CardContent className="space-y-2">
-							<div className="flex justify-between items-center text-sm">
-								<span className="text-muted-foreground">Care Level:</span>
-								<Badge className={getCareColor(fish.care)}>{fish.care}</Badge>
-							</div>
-							<div className="flex justify-between text-sm">
-								<span className="text-muted-foreground">Size:</span>
-								<span className="font-medium">{fish.size}</span>
-							</div>
-							<div className="flex justify-between text-sm">
-								<span className="text-muted-foreground">pH Range:</span>
-								<span className="font-medium">{fish.ph}</span>
-							</div>
-							<div className="flex justify-between text-sm">
-								<span className="text-muted-foreground">Temperature:</span>
-								<span className="font-medium">{fish.temp}</span>
-							</div>
-						</CardContent>
-					</Card>
-				))}
-			</div> */}
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 				{isLoading ? (
-					<div>Loading...</div>
+					<div className="flex items-center justify-center py-12">
+						<Loader2 className="w-8 h-8 animate-spin text-primary" />
+					</div>
 				) : isError ? (
 					<div>Error loading species.</div>
 				) : (
