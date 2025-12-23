@@ -115,29 +115,28 @@ const About = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto mb-20">
-          <Card>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto mb-20">
+          <Card className="overflow-hidden">
+            <img
+            src={alexChen}
+            alt="Alex Chen"
+            className="w-full h-80 object-cover"
+          />
             <CardContent className="p-6 text-center">
-              <img
-                src={alexChen}
-                alt="Alex Chen"
-                className="w-32 h-32 rounded-lg object-cover mx-auto mb-4"
-              />
-              <h3 className="font-semibold">Alex Chen</h3>
+              <h3 className="text-lg font-semibold">Alex Chen</h3>
               <p className="text-sm text-muted-foreground">
                 Founder & Freshwater Expert
               </p>
             </CardContent>
           </Card>
-
-          <Card>
+          <Card className="overflow-hidden">
+            <img
+              src={maria}
+              alt="Maria Garcia"
+              className="w-full h-80 object-cover"
+            />
             <CardContent className="p-6 text-center">
-              <img
-                src={maria}
-                alt="Maria Garcia"
-                className="w-32 h-32 rounded-lg object-cover mx-auto mb-4"
-              />
-              <h3 className="font-semibold">Maria Garcia</h3>
+              <h3 className="text-lg font-semibold">Maria Garcia</h3>
               <p className="text-sm text-muted-foreground">
                 Saltwater & Coral Specialist
               </p>
