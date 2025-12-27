@@ -25,6 +25,10 @@ Guest.init(
         isIP: true, // supports IPv4 & IPv6
       },
     },
+    country_code: {
+      type: DataTypes.STRING(2), // ISO-2: IN, US, GB
+      allowNull: true,
+    },
   },
   {
     sequelize,
