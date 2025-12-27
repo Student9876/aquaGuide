@@ -28,6 +28,7 @@ import { useEffect } from "react";
 import { setRole } from "./store/userSlice";
 import ViewTextGuide from "./pages/ViewTextGuide";
 import ViewFish from "./pages/ViewFish";
+import ViewForum from "./pages/ViewForum";
 
 const queryClient = new QueryClient();
 
@@ -104,6 +105,15 @@ const App = () => {
               element={
                 <Layout>
                   <ViewFish />
+                </Layout>
+              }
+            />
+
+            <Route
+              path="/view/forum/:id"
+              element={
+                <Layout>
+                  <ViewForum />
                 </Layout>
               }
             />
