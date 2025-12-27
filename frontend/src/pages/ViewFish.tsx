@@ -1,3 +1,4 @@
+import React, {useState} from "react";
 import {useParams, useNavigate} from "react-router-dom";
 import {useQuery} from "@tanstack/react-query";
 import {Button} from "@/components/ui/button";
@@ -24,6 +25,19 @@ const ViewFish = () => {
 	});
 
 	const fish = data?.species;
+	const [showPhInfo, setShowPhInfo] = useState(false);
+	const [phTooltipPos, setPhTooltipPos] = useState({x: 0, y: 0});
+	const [isHoveringTooltip, setIsHoveringTooltip] = useState(false);
+	const hideTimer = React.useRef<NodeJS.Timeout | null>(null);
+	const [isMobile, setIsMobile] = useState(false);
+	const barRef = React.useRef<HTMLDivElement>(null);
+
+	React.useEffect(() => {
+		setIsMobile(window.innerWidth < 768);
+		const handleResize = () => setIsMobile(window.innerWidth < 768);
+		window.addEventListener("resize", handleResize);
+		return () => window.removeEventListener("resize", handleResize);
+	}, []);
 
 	const InfoItem = ({icon: Icon, label, value}: {icon: React.ComponentType<{className?: string}>; label: string; value: string}) => (
 		<div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
@@ -65,6 +79,12 @@ const ViewFish = () => {
 			</div>
 		);
 	}
+	const phInfo = {
+		range: `${fish.min_ph} - ${fish.max_ph}`,
+		description: "Light Green - Ideal for most community fish",
+		note: "Match this color when testing your aquarium water",
+		link: "https://www.example.com/ph-info", // Replace with your actual link
+	};
 
 	return (
 		<div className="min-h-screen bg-background">
@@ -137,13 +157,76 @@ const ViewFish = () => {
 							<InfoItem icon={Utensils} label="Diet Type" value={fish.diet_type || "N/A"} />
 						</div>
 						<div className="mt-6">
-							<RangeBar
-								label="pH Range"
-								rangeMin={Number(fish.min_ph)}
-								rangeMax={Number(fish.max_ph)}
-								fixedScale={[4, 10]}
-								gradient="linear-gradient(90deg, #ff0000 0%, #ffff00 50%, #0000ff 100%)"
-							/>
+							{/* pH RangeBar with hoverable tooltip */}
+							<div
+								className="relative w-[600] m-0"
+	 							ref={barRef}
+								onMouseMove={e => {
+									const rect = barRef.current?.getBoundingClientRect();
+									const barWidth = rect ? rect.width : 600; // fallback
+									const tooltipWidth = 340;
+									let x = e.clientX - rect.left - tooltipWidth / 2;
+									// Clamp so the box stays within the bar
+									x = Math.max(0, Math.min(x, barWidth - tooltipWidth));
+									setPhTooltipPos({ x, y: e.clientY - rect.top });
+									setShowPhInfo(true);
+									if (hideTimer.current) clearTimeout(hideTimer.current);
+								}}
+								onMouseLeave={() => {
+									// Start a timer to hide the tooltip after 3.5s, unless hovering the tooltip
+									hideTimer.current = setTimeout(() => {
+										if (!isHoveringTooltip) setShowPhInfo(false);
+									}, 3500);
+								}}
+							>
+								<RangeBar
+									label="pH Range"
+									rangeMin={Number(fish.min_ph)}
+									rangeMax={Number(fish.max_ph)}
+									fixedScale={[4, 10]}
+									gradient="linear-gradient(90deg, #ff0000 0%, #ffff00 50%, #0000ff 100%)"
+								/>
+								{showPhInfo && (
+									<div
+										className="absolute z-20"
+										style={{
+											left: phTooltipPos.x,
+											top: 48, // or whatever fixed vertical offset you want
+											minWidth: 320,
+											maxWidth: 340,
+										}}
+										onMouseEnter={() => {
+											setIsHoveringTooltip(true);
+											if (hideTimer.current) clearTimeout(hideTimer.current);
+										}}
+										onMouseLeave={() => {
+											setIsHoveringTooltip(false);
+											hideTimer.current = setTimeout(() => setShowPhInfo(false), 3500);
+										}}
+									>
+										<div className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl shadow-xl p-4">
+											<div className="flex items-center gap-3 mb-2">
+												<div className="w-8 h-8 rounded bg-gradient-to-r from-red-500 via-green-400 to-blue-600 border" />
+												<div>
+													<div className="font-semibold text-base">pH Range: {phInfo.range}</div>
+													<div className="text-xs text-blue-500">Neutral</div>
+												</div>
+											</div>
+											<div className="text-sm bg-muted/50 rounded p-2 mb-2">{phInfo.description}</div>
+											<div className="text-xs text-muted-foreground mb-2">{phInfo.note}</div>
+											<a
+												href={phInfo.link}
+												target="_blank"
+												rel="noopener noreferrer"
+												className="block text-center mt-2 px-3 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 font-medium hover:bg-blue-200 dark:hover:bg-blue-800 transition"
+												onClick={e => e.stopPropagation()} // Prevent closing on click
+											>
+												to understand the pH click here
+											</a>
+										</div>
+									</div>
+								)}
+							</div>
 							<RangeBar
 								label="Temperature Range"
 								rangeMin={Number(fish.min_temp)}
