@@ -260,6 +260,5 @@ router.get("/getLocation", getUserLocation);
 router.post("/heartbeat",optionalProtectRoute,heartbeat );
 
 router.post("/guestCreate", createGuest);
-router.get("/location", protectRoute, getUserLocations);
 
 export default router;
