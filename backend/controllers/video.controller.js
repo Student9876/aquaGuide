@@ -163,7 +163,7 @@ export const deleteSelectedVideos = async (req, res) => {
 export const getActiveVideoGuides = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = 12;
+    const limit = 2;
     const offset = (page - 1) * limit;
 
     const { rows: videos, count: total } = await VideoGuide.findAndCountAll({

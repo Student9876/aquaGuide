@@ -16,71 +16,12 @@ import { toast } from "sonner";
 
 const iconArray = ["🐠", "💧", "🏥", "🌿", "🌱", "🥚", "🌍"];
 
-const guides = [
-  {
-    id: 1,
-    title: "Complete Beginner's Guide to Fishkeeping",
-    category: "Beginner",
-    readTime: "15 min",
-    icon: "🐠",
-  },
-  {
-    id: 2,
-    title: "The Ultimate Guide to Water Chemistry",
-    category: "Water Parameters",
-    readTime: "20 min",
-    icon: "💧",
-  },
-  {
-    id: 3,
-    title: "Aquascaping 101: Create Stunning Underwater Landscapes",
-    category: "Aquascaping",
-    readTime: "25 min",
-    icon: "🌿",
-  },
-  {
-    id: 4,
-    title: "Fish Health and Disease Prevention",
-    category: "Health",
-    readTime: "18 min",
-    icon: "🏥",
-  },
-  {
-    id: 5,
-    title: "Setting Up a Planted Aquarium",
-    category: "Plants",
-    readTime: "22 min",
-    icon: "🌱",
-  },
-  {
-    id: 6,
-    title: "Advanced Breeding Techniques",
-    category: "Breeding",
-    readTime: "30 min",
-    icon: "🥚",
-  },
-  {
-    id: 7,
-    title: "Choosing the Right Filter System",
-    category: "Equipment",
-    readTime: "12 min",
-    icon: "⚙️",
-  },
-  {
-    id: 8,
-    title: "Creating a Biotope Aquarium",
-    category: "Advanced",
-    readTime: "28 min",
-    icon: "🌍",
-  },
-];
-
 const TextGuides = () => {
   const [page, setPage] = useState(1);
   const { data, isLoading, isError } = useTextGuidePublic(page);
 
   const textGuidesArray: TextGuide[] = data?.data || [];
-
+  const totalPages: number = data?.pagination?.totalPages || 1;
 
   const navigate = useNavigate();
 
@@ -89,7 +30,11 @@ const TextGuides = () => {
   };
   if (isLoading) return <CircularLoader />;
   if (isError)
-    return (<div className="text-red-600">Failed to load guides. Please try again later.</div>);
+    return (
+      <div className="text-red-600">
+        Failed to load guides. Please try again later.
+      </div>
+    );
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="mb-6 md:mb-8">

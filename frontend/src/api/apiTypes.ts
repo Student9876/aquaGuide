@@ -116,8 +116,8 @@ export interface approvalIds {
 }
 
 export interface getVideoResponse {
-  message: string;
-  video: VideoArray[];
+  videos: VideoArray[];
+  pagination: paginate;
 }
 
 export interface Guest {
@@ -322,12 +322,12 @@ export interface author {
   role: "admin" | "user" | "support";
 }
 
-export interface Pagination {
-  total_items: number;
-  current_page: number;
-  totalPages: number;
-  pageSize: number;
-}
+// export interface Pagination {
+//   total_items: number;
+//   current_page: number;
+//   totalPages: number;
+//   pageSize: number;
+// }
 
 export interface GetAllTextGuidesResponse {
   data: TextGuide[]; // array of guides
