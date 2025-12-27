@@ -1,4 +1,6 @@
 import {
+  CommentPayload,
+  CommentResponse,
   CommunityApproveRejectDeleteResponse,
   CommunityForumDetailResponse,
   CommunityForumPayload,
@@ -69,7 +71,7 @@ export const community_forum_api = {
         return res.data;
     },
 
-  likeComment: async (data: LikeDislikePayload) => {
+  likeCommunity: async (data: LikeDislikePayload) => {
     const res = await httpClient.put<LikeDislikeCommunity>(
       "/api/community/like",
       data,
@@ -80,13 +82,21 @@ export const community_forum_api = {
     return res.data;
   },
 
-  dislikeComment: async (data: LikeDislikePayload) => {
+  dislikeCommunity: async (data: LikeDislikePayload) => {
     const res = await httpClient.put<LikeDislikeCommunity>(
       "/api/community/dislike",
       data,
       {
         headers: { useAuth: true },
       }
+    );
+    return res.data;
+  },
+  addComment: async (data: CommentPayload, forum_id: string) => {
+    const res = await httpClient.post<CommentResponse>(
+      `/api/community/add_comment/${forum_id}`,
+      data,
+      { headers: { useAuth: true } }
     );
     return res.data;
   },

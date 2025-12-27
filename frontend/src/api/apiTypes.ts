@@ -371,6 +371,14 @@ export interface Comment {
   updatedAt: string;
 }
 
+export interface CommentPayload {
+  content: string;
+}
+
+export interface CommentResponse{
+  data: Comment;
+  message: string;
+}
 export interface CommunityForumDetailResponse {
   message: string;
   data: CommunityForum;
@@ -392,6 +400,11 @@ export interface CommunityForumPayload{
   content: string
 }
 
+
 export interface LikeDislikePayload{
   forum_id: string
+}
+export interface GetSpeciesDetailResponse {
+  species: SpeciesItem;
+  related_species: SpeciesItem[];
 }

@@ -97,7 +97,7 @@ export const get_approved_community_forum = async (req, res) => {
                 ]
             },
 
-            group: ["CommunityForum.id", "User.name", "User.id"],
+            group: ["CommunityForum.id", "User.userid", "User.id"],
             subQuery: false,   // ensure the JOIN is included in the outer query
             offset,
             limit,

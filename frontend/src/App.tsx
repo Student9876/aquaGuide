@@ -28,6 +28,7 @@ import { useEffect } from "react";
 import { setRole } from "./store/userSlice";
 import ViewTextGuide from "./pages/ViewTextGuide";
 import ViewFish from "./pages/ViewFish";
+import ViewForum from "./pages/ViewForum";
 
 const queryClient = new QueryClient();
 
@@ -107,6 +108,15 @@ const App = () => {
                 </Layout>
               }
             />
+
+            <Route
+              path="/view/forum/:id"
+              element={
+                <Layout>
+                  <ViewForum />
+                </Layout>
+              }
+            />
             <Route
               path="/species-dictionary"
               element={
@@ -120,6 +130,15 @@ const App = () => {
               element={
                 <Layout>
                   <CommunityForum />
+                </Layout>
+              }
+            />
+
+            <Route
+              path = "/get_community_forum_by_id/:id"
+              element={
+                <Layout>
+                  <ViewForum />
                 </Layout>
               }
             />
