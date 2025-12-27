@@ -160,15 +160,15 @@ const ViewFish = () => {
 							{/* pH RangeBar with hoverable tooltip */}
 							<div
 								className="relative w-[600] m-0"
-	 							ref={barRef}
-								onMouseMove={e => {
+								ref={barRef}
+								onMouseMove={(e) => {
 									const rect = barRef.current?.getBoundingClientRect();
 									const barWidth = rect ? rect.width : 600; // fallback
 									const tooltipWidth = 340;
 									let x = e.clientX - rect.left - tooltipWidth / 2;
 									// Clamp so the box stays within the bar
 									x = Math.max(0, Math.min(x, barWidth - tooltipWidth));
-									setPhTooltipPos({ x, y: e.clientY - rect.top });
+									setPhTooltipPos({x, y: e.clientY - rect.top});
 									setShowPhInfo(true);
 									if (hideTimer.current) clearTimeout(hideTimer.current);
 								}}
@@ -178,7 +178,16 @@ const ViewFish = () => {
 										if (!isHoveringTooltip) setShowPhInfo(false);
 									}, 800);
 								}}
-							>
+								onClick={(e) => {
+									const rect = barRef.current?.getBoundingClientRect();
+									const barWidth = rect ? rect.width : 600;
+									const tooltipWidth = 340;
+									let x = e.clientX - rect.left - tooltipWidth / 2;
+									x = Math.max(0, Math.min(x, barWidth - tooltipWidth));
+									setPhTooltipPos({x, y: e.clientY - rect.top});
+									setShowPhInfo((prev) => !prev);
+									if (hideTimer.current) clearTimeout(hideTimer.current);
+								}}>
 								<RangeBar
 									label="pH Range"
 									rangeMin={Number(fish.min_ph)}
@@ -202,8 +211,7 @@ const ViewFish = () => {
 										onMouseLeave={() => {
 											setIsHoveringTooltip(false);
 											hideTimer.current = setTimeout(() => setShowPhInfo(false), 2000);
-										}}
-									>
+										}}>
 										<div className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl shadow-xl p-4">
 											<div className="flex items-center gap-3 mb-2">
 												<div className="w-8 h-8 rounded bg-gradient-to-r from-red-500 via-green-400 to-blue-600 border" />
@@ -219,7 +227,7 @@ const ViewFish = () => {
 												target="_blank"
 												rel="noopener noreferrer"
 												className="block text-center mt-2 px-3 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 font-medium hover:bg-blue-200 dark:hover:bg-blue-800 transition"
-												onClick={e => e.stopPropagation()} // Prevent closing on click
+												onClick={(e) => e.stopPropagation()} // Prevent closing on click
 											>
 												to understand the pH click here
 											</a>
