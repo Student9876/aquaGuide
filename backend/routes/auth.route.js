@@ -12,7 +12,7 @@ import {
   getUserRole,
   getUserLocation,
 } from "../controllers/auth.controller.js";
-import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
+import { protectRoute, adminRoute,optionalProtectRoute } from "../middleware/auth.middleware.js";
 import { heartbeat } from "../controllers/heartbeat.controller.js";
 
 const router = express.Router();
@@ -255,6 +255,6 @@ router.get("/getrole", getUserRole);
 // Live location
 router.get("/getLocation", getUserLocation);
 
-router.post("/heartbeat",heartbeat );
+router.post("/heartbeat",optionalProtectRoute,heartbeat );
 
 export default router;
