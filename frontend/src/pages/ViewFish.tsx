@@ -79,11 +79,17 @@ const ViewFish = () => {
 			</div>
 		);
 	}
+	const avgPh = (Number(fish.min_ph) + Number(fish.max_ph)) / 2;
+	let phNature = "Neutral";
+	if (avgPh < 6.8) phNature = "Acidic";
+	else if (avgPh > 7.2) phNature = "Alkaline";
+
 	const phInfo = {
 		range: `${fish.min_ph} - ${fish.max_ph}`,
 		description: "Light Green - Ideal for most community fish",
 		note: "Match this color when testing your aquarium water",
-		link: "https://www.example.com/ph-info", // Replace with your actual link
+		link: "/ph-guide", // Replace with your actual link
+		nature: phNature,
 	};
 
 	return (
@@ -217,7 +223,7 @@ const ViewFish = () => {
 												<div className="w-8 h-8 rounded bg-gradient-to-r from-red-500 via-green-400 to-blue-600 border" />
 												<div>
 													<div className="font-semibold text-base">pH Range: {phInfo.range}</div>
-													<div className="text-xs text-blue-500">Neutral</div>
+													<div className="text-xs text-blue-500">{phInfo.nature}</div>
 												</div>
 											</div>
 											<div className="text-sm bg-muted/50 rounded p-2 mb-2">{phInfo.description}</div>
@@ -226,9 +232,7 @@ const ViewFish = () => {
 												href={phInfo.link}
 												target="_blank"
 												rel="noopener noreferrer"
-												className="block text-center mt-2 px-3 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 font-medium hover:bg-blue-200 dark:hover:bg-blue-800 transition"
-												onClick={(e) => e.stopPropagation()} // Prevent closing on click
-											>
+												className="block text-center mt-2 px-3 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 font-medium hover:bg-blue-200 dark:hover:bg-blue-800 transition w-full">
 												to understand the pH click here
 											</a>
 										</div>
