@@ -176,7 +176,7 @@ const ViewFish = () => {
 									// Start a timer to hide the tooltip after 3.5s, unless hovering the tooltip
 									hideTimer.current = setTimeout(() => {
 										if (!isHoveringTooltip) setShowPhInfo(false);
-									}, 3500);
+									}, 800);
 								}}
 							>
 								<RangeBar
@@ -201,7 +201,7 @@ const ViewFish = () => {
 										}}
 										onMouseLeave={() => {
 											setIsHoveringTooltip(false);
-											hideTimer.current = setTimeout(() => setShowPhInfo(false), 3500);
+											hideTimer.current = setTimeout(() => setShowPhInfo(false), 2000);
 										}}
 									>
 										<div className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl shadow-xl p-4">
