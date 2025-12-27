@@ -255,6 +255,6 @@ router.get("/getrole", getUserRole);
 // Live location
 router.get("/getLocation", getUserLocation);
 
-router.post("/heartbeat",protectRoute,heartbeat );
+router.post("/heartbeat",heartbeat );
 
 export default router;
