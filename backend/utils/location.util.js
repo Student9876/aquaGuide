@@ -7,15 +7,27 @@ export const getClientIp = (req) => {
   );
 };
 
-export const getCountryCodeFromRequest = (req) => {
-  // 1️⃣ Cloudflare (best case)
+export const getGeoFromRequest = (req) => {
+  // 1️⃣ Cloudflare (partial info)
   if (req.headers["cf-ipcountry"]) {
-    return req.headers["cf-ipcountry"];
+    return {
+      country_code: req.headers["cf-ipcountry"],
+      region: null,
+      latitude: null,
+      longitude: null,
+    };
   }
 
-  // 2️⃣ GeoIP fallback
+  // 2️⃣ GeoIP lookup
   const ip = getClientIp(req);
   const geo = geoip.lookup(ip);
 
-  return geo?.country || null;
+  if (!geo) return null;
+
+  return {
+    country_code: geo.country || null,
+    region: geo.region || geo.city || null,
+    latitude: geo.ll?.[0] ?? null,
+    longitude: geo.ll?.[1] ?? null,
+  };
 };

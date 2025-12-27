@@ -1,15 +1,15 @@
 import Guest from "../models/guestModel.js";
 import {
   getClientIp,
-  getCountryCodeFromRequest,
+  getGeoFromRequest,
 } from "../utils/location.util.js";
 
 export const createGuest = async (req, res) => {
   try {
     const ipAddress = getClientIp(req);
-    const countryCode = getCountryCodeFromRequest(req);
+    const geo = getGeoFromRequest(req);
 
-    // 1️⃣ Check if guest already exists
+    // 1️⃣ Check existing guest
     let guest = await Guest.findOne({
       where: { ip_address: ipAddress },
     });
@@ -22,10 +22,13 @@ export const createGuest = async (req, res) => {
       });
     }
 
-    // 2️⃣ Create new guest
+    // 2️⃣ Create guest with geo data
     guest = await Guest.create({
       ip_address: ipAddress,
-      country_code: countryCode,
+      country_code: geo?.country_code ?? null,
+      region: geo?.region ?? null,
+      latitude: geo?.latitude ?? null,
+      longitude: geo?.longitude ?? null,
     });
 
     return res.status(201).json({
@@ -34,7 +37,7 @@ export const createGuest = async (req, res) => {
       guest,
     });
   } catch (error) {
-    // 3️⃣ Handle race condition
+    // 3️⃣ Race condition handling
     if (error.name === "SequelizeUniqueConstraintError") {
       const ipAddress = getClientIp(req);
 
