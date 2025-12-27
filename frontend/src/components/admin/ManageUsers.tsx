@@ -37,7 +37,7 @@ const ManageUsers = () => {
   const queryClient = useQueryClient();
   const { data, isLoading, isError } = useUsers(page);
   const userArray: User[] = data?.users || [];
-  const totalPages: number = data?.paginate?.totalPages || 1;
+  const totalPages: number = data?.pagination?.totalPages || 1;
 
   const deactivateUserMutation = useMutation({
     mutationFn: authApi.deactivateUser,

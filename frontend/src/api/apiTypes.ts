@@ -148,7 +148,7 @@ export interface User {
 export interface UserDetailsResponse {
   title: string;
   users: User[];
-  paginate: paginate;
+  pagination: paginate;
 }
 
 export interface paginate {
