@@ -1,4 +1,5 @@
 import { INTEGER, Sequelize } from "sequelize";
+import pg from "pg";
 import dotenv from "dotenv";
 dotenv.config();
 const database_name = process.env.DATABASE_NAME
