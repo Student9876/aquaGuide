@@ -34,12 +34,38 @@ export const get_community_forum = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = 20;
     const offset = (page - 1) * limit;
-    const { count, rows } = await CommunityForum.findAndCountAll({
-      group: ["CommunityForum.id"],
-      offset,
-      limit,
-      order: [["createdAt", "DESC"]],
-    });
+        const { count, rows } = await CommunityForum.findAndCountAll({
+      include: [
+        {
+          model: Comments,
+          as: "Comments", // must match association alias
+          attributes: [],
+          required: false,
+        },
+        {
+          model: User,
+          as: "User",
+          attributes: [],
+          required: true,
+        },
+      ],
+
+      attributes: {
+        include: [
+          [
+            sequelize.fn("COUNT", sequelize.col("Comments.id")),
+            "Total_Comments",
+          ],
+          [sequelize.col("User.userid"), "Creator_Username"],
+        ],
+      },
+
+            group: ["CommunityForum.id", "User.userid", "User.id"],
+            subQuery: false,   // ensure the JOIN is included in the outer query
+            offset,
+            limit,
+            order: [["createdAt", "DESC"]]
+        });
     res.status(200).json({
       data: rows,
       pagination: {
@@ -116,7 +142,18 @@ export const get_approved_community_forum = async (req, res) => {
 export const get_community_form_by_id = async (req, res) => {
   try {
     const { id } = req.params;
-    const community_forum = await CommunityForum.findByPk(id);
+    const community_forum = await CommunityForum.findByPk(id, {
+      include: [
+        {
+          model: User,
+          as: "User",
+          attributes: ["userid"],
+        },
+      ],
+      attributes: {
+        include: [[sequelize.col("User.userid"), "Creator_Username"]]
+      }
+    });
     if (community_forum == null) {
       res.status(404).json({
         message: "Community forum not found",
