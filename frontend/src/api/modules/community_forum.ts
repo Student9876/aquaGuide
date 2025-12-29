@@ -1,4 +1,5 @@
 import {
+  approvalIds,
   CommunityApproveRejectDeleteResponse,
   CommunityForumDetailResponse,
   CommunityForumPayload,
@@ -49,9 +50,10 @@ export const community_forum_api = {
     return res.data;
   },
 
-  approveCommunity: async (forum_id: string) => {
+  approveCommunity: async (data: approvalIds) => {
     const res = await httpClient.put<CommunityApproveRejectDeleteResponse>(
-      `${BACKEND_URL}/api/community/approve_community?forum_id=${forum_id}`,
+      `${BACKEND_URL}/api/community/approve_community`,
+      data,
       {
         headers: { useAuth: true },
       }
@@ -59,9 +61,10 @@ export const community_forum_api = {
     return res.data;
   },
 
-  rejectCommunity: async (forum_id: string) => {
+  rejectCommunity: async (data: approvalIds) => {
     const res = await httpClient.put<CommunityApproveRejectDeleteResponse>(
-      `${BACKEND_URL}/api/community/reject_community?forum_id=${forum_id}`,
+      `${BACKEND_URL}/api/community/reject_community`,
+      data,
       {
         headers: { useAuth: true },
       }
@@ -79,9 +82,10 @@ export const community_forum_api = {
     return res.data;
   },
 
-  deleteCommunityForum: async (forum_id: string) => {
-    const res = await httpClient.delete<CommunityApproveRejectDeleteResponse>(
-      `${BACKEND_URL}/api/community/delete_community_forum?forum_id=${forum_id}`,
+  deleteCommunityForum: async (data: approvalIds) => {
+    const res = await httpClient.post<CommunityApproveRejectDeleteResponse>(
+      `${BACKEND_URL}/api/community/delete_community_forum`,
+      data,
       {
         headers: { useAuth: true },
       }

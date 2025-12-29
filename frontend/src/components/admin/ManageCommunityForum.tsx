@@ -107,29 +107,42 @@ const ManageCommunityForum = ({ placeholder }) => {
     },
   });
 
-  const deleteTextGuideMutation = useMutation({
-    mutationFn: textApi.setDelete,
+  const deleteCommunityMutation = useMutation({
+    mutationFn: community_forum_api.deleteCommunityForum,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["texts"] });
-      toast.success("Text guide deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["communityForumAdmin"] });
+      toast.success("Community Forum deleted successfully");
       setTitle("");
       setContent("");
     },
     onError: () => {
-      toast.error("Failed to delete text guide");
+      toast.error("Failed to delete community forum");
     },
   });
 
-  const approveorrejectTextGuideMutation = useMutation({
-    mutationFn: textApi.setApproveOrReject,
+  const approveCommunityMutation = useMutation({
+    mutationFn: community_forum_api.approveCommunity,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["texts"] });
-      toast.success("Text guide deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["communityForumAdmin"] });
+      toast.success("Community Approved successfully");
       setTitle("");
       setContent("");
     },
     onError: () => {
-      toast.error("Failed to update text guide status");
+      toast.error("Failed to update Community status");
+    },
+  });
+
+  const rejectCommunityMutation = useMutation({
+    mutationFn: community_forum_api.rejectCommunity,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["communityForumAdmin"] });
+      toast.success("Community Approved successfully");
+      setTitle("");
+      setContent("");
+    },
+    onError: () => {
+      toast.error("Failed to update Community status");
     },
   });
 
@@ -172,16 +185,14 @@ const ManageCommunityForum = ({ placeholder }) => {
 
   const handleBulkAction = (action: "approve" | "reject" | "delete") => {
     if (action === "delete") {
-      deleteTextGuideMutation.mutate({ ids: selectedGuides });
+      deleteCommunityMutation.mutate({ ids: selectedGuides });
     } else if (action === "approve") {
-      approveorrejectTextGuideMutation.mutate({
+      approveCommunityMutation.mutate({
         ids: selectedGuides,
-        status: "approved",
       });
     } else if (action === "reject") {
-      approveorrejectTextGuideMutation.mutate({
+      rejectCommunityMutation.mutate({
         ids: selectedGuides,
-        status: "rejected",
       });
     }
     setSelectedGuides([]);
