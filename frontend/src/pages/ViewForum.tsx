@@ -11,115 +11,94 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { useState } from "react";
+import { useCommunityForumbyId, useCommunityForumPublic, useCommunityForumPublicInfinite } from "@/hooks/useCommunityForumPublic";
+import CircularLoader from "@/components/ui/CircularLoader";
+import { community_forum_api } from "@/api/modules/community_forum";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-const forumPosts = [
-  {
-    id: 1,
-    title: "Help! My fish are acting strange",
-    author: "AquaNewbie",
-    category: "Help",
-    content:
-      "I've noticed my fish have been swimming erratically and hiding more than usual. The water parameters seem fine (pH 7.2, ammonia 0, nitrites 0, nitrates 20ppm). They were perfectly fine yesterday but today they seem stressed. Has anyone experienced this before? Could it be related to the new decoration I added?",
-    replies: 24,
-    upvotes: 45,
-    downvotes: 3,
-    time: "2 hours ago",
-  },
-  {
-    id: 2,
-    title: "Show off your newest additions",
-    author: "TankMaster",
-    category: "Showcase",
-    content:
-      "Just got some beautiful cardinal tetras to add to my planted tank! They're absolutely stunning with their vibrant red and blue colors. Took me weeks to find healthy specimens at my local fish store. Share your recent additions below!",
-    replies: 56,
-    upvotes: 89,
-    downvotes: 2,
-    time: "5 hours ago",
-  },
-  {
-    id: 3,
-    title: "Best filter for 20 gallon tank?",
-    author: "FishLover99",
-    category: "Equipment",
-    content:
-      "Looking for recommendations on the best filter for my 20 gallon community tank. Currently considering hang-on-back vs canister filters. Budget is around $50-80. What do you all use and recommend?",
-    replies: 18,
-    upvotes: 15,
-    downvotes: 1,
-    time: "1 day ago",
-  },
-  {
-    id: 4,
-    title: "Breeding success with my angelfish!",
-    author: "AngelsRule",
-    category: "Breeding",
-    content:
-      "After months of trying, my pair of angelfish finally laid eggs and they're hatching! I'm so excited. The parents are being very protective. Any tips for raising the fry would be greatly appreciated!",
-    replies: 32,
-    upvotes: 67,
-    downvotes: 0,
-    time: "1 day ago",
-  },
-  {
-    id: 5,
-    title: "Water parameter testing frequency?",
-    author: "ChemistryPro",
-    category: "Water Quality",
-    content:
-      "How often do you all test your water parameters? I've been doing it weekly but wondering if that's overkill for an established tank. Also, which test kit do you prefer - strips or liquid?",
-    replies: 41,
-    upvotes: 34,
-    downvotes: 5,
-    time: "2 days ago",
-  },
-  {
-    id: 6,
-    title: "My planted tank journey",
-    author: "PlantGeek",
-    category: "Plants",
-    content:
-      "Started my planted tank 6 months ago and wanted to share my progress. Started with just java fern and anubias, now I have a full carpet of monte carlo and various stem plants. CO2 injection really made a difference!",
-    replies: 78,
-    upvotes: 156,
-    downvotes: 4,
-    time: "3 days ago",
-  },
-];
-
-const comments = [
-  {
-    id: 1,
-    author: "FishExpert",
-    content:
-      "This sounds like it could be stress from the new decoration. Try removing it temporarily and see if they calm down.",
-    time: "1 hour ago",
-  },
-  {
-    id: 2,
-    author: "AquaHelper",
-    content:
-      "Have you checked if the decoration is aquarium-safe? Some decorations can leach harmful substances.",
-    time: "45 min ago",
-  },
-  {
-    id: 3,
-    author: "TankVeteran",
-    content:
-      "I had the same issue when I added a new cave. The fish were scared of it at first but got used to it after a few days.",
-    time: "30 min ago",
-  },
-];
 
 const ViewForum = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [newComment, setNewComment] = useState("");
+  const { id } = useParams<{ id: string }>();
+
+  const isAuthenticated = !!localStorage.getItem("accessToken");
+  console.log(isAuthenticated)
+  
+  const redirectToLogin = () => {
+  navigate("/login", {
+    state: { from: location.pathname },
+  });
+  };
+
+  const {data: forumResponse, isLoading: isLoadingPost, isError: isErrorPost} = useCommunityForumbyId(id!);
+
   const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
+  const [newComment, setNewComment] = useState("");
 
-  const post = forumPosts.find((p) => p.id === Number(id));
+  const {
+  data: forumListData,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+  isLoading: isForumListLoading,
+  isError: isForumListError,
+} = useCommunityForumPublicInfinite();
 
-  if (!post) {
+  const navigate = useNavigate();
+
+  const queryClient = useQueryClient();
+
+  const voteMutation = useMutation({
+    mutationFn: (type: "up" | "down") => {
+      if (type === "up") {
+        return community_forum_api.likeCommunity({ forum_id: id! });
+      } else {
+        return community_forum_api.dislikeCommunity({ forum_id: id! });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["communityForumbyId", id],
+      });
+    },
+  })
+
+  const addCommentMutation = useMutation({
+  mutationFn: (content: string) =>
+    community_forum_api.addComment({ content }, id!),
+
+  onSuccess: () => {
+    setNewComment("");
+
+    queryClient.invalidateQueries({
+      queryKey: ["communityForumbyId", forumPost.id],
+    });
+  },
+});
+
+  const forumPost = forumResponse?.data;
+  const forumList = forumListData?.pages.flatMap(page => page.data) ?? [];
+  const comments = forumResponse?.comments || [];
+
+    if (isLoadingPost) {
+    return <CircularLoader />;
+  }
+
+  if (isErrorPost) {
+    return (
+      <div className="container mx-auto px-4 py-12 text-center">
+        <h1 className="text-2xl font-bold mb-4 text-red-600">
+          Failed to load the forum post. Please try again later.
+        </h1>
+        <Button onClick={() => navigate("/community-forum")}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Forum
+        </Button>
+      </div>
+    );
+  }
+
+
+  if (!forumPost) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
         <h1 className="text-2xl font-bold mb-4">Forum post not found</h1>
@@ -131,17 +110,26 @@ const ViewForum = () => {
     );
   }
 
-  const handleVote = (type: "up" | "down") => {
-    setUserVote(userVote === type ? null : type);
-  };
 
-  const handleSubmitComment = () => {
-    if (newComment.trim()) {
-      // Handle comment submission
-      setNewComment("");
+
+  const handlevote = (type: "up" | "down") => {
+    if (!isAuthenticated) {
+      redirectToLogin();
+      return;
     }
-  };
+    setUserVote(prev => prev === type ? null : type);
+    voteMutation.mutate(type);
+  }
 
+const handleSubmitComment = () => {
+  if (!isAuthenticated) {
+    redirectToLogin();
+    return;
+  }
+  if (!newComment.trim()) return;
+
+  addCommentMutation.mutate(newComment);
+};
   return (
     <div className="container mx-auto px-4 py-8 lg:py-12">
       <Button
@@ -160,40 +148,40 @@ const ViewForum = () => {
           <Card>
             <CardHeader>
               <div className="flex flex-wrap items-center gap-2 mb-2">
-                <Badge variant="secondary">{post.category}</Badge>
                 <span className="text-sm text-muted-foreground">
-                  {post.time}
+                  {forumPost.createdAt}
                 </span>
               </div>
               <CardTitle className="text-xl sm:text-2xl">
-                {post.title}
+                {forumPost.title}
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Posted by {post.author}
+                Posted by {forumPost.Creator_Username}
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-foreground leading-relaxed">{post.content}</p>
-
+              <p className="text-foreground leading-relaxed" dangerouslySetInnerHTML={{__html: forumPost.content}}/>
               {/* Vote Section */}
               <div className="flex items-center gap-4 pt-4 border-t">
                 <Button
+                  type="button"
                   variant={userVote === "up" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => handleVote("up")}
+                  onClick={() => handlevote("up")}
                   className="gap-2"
                 >
                   <ThumbsUp className="h-4 w-4" />
-                  <span>{post.upvotes + (userVote === "up" ? 1 : 0)}</span>
+                  <span>{forumPost.likes.length}</span>
                 </Button>
                 <Button
+                  type="button"
                   variant={userVote === "down" ? "destructive" : "outline"}
                   size="sm"
-                  onClick={() => handleVote("down")}
+                  onClick={() => handlevote("down")}
                   className="gap-2"
                 >
-                  <ThumbsDown className="h-4 w-4" />
-                  <span>{post.downvotes + (userVote === "down" ? 1 : 0)}</span>
+                  <ThumbsDown className="h-4 w-4" onClick={() => handlevote("down")} />
+                  <span>{forumPost.dislike.length}</span>
                 </Button>
               </div>
             </CardContent>
@@ -218,7 +206,7 @@ const ViewForum = () => {
                 />
                 <Button
                   onClick={handleSubmitComment}
-                  disabled={!newComment.trim()}
+                  disabled={!newComment.trim() || addCommentMutation.isPending}
                   className="self-end"
                 >
                   <Send className="h-4 w-4 mr-2" />
@@ -232,10 +220,10 @@ const ViewForum = () => {
                   <div key={comment.id} className="p-4 bg-muted/50 rounded-lg">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
                       <span className="font-medium text-sm">
-                        {comment.author}
+                        {comment.UserId}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        • {comment.time}
+                        • {comment.createdAt}
                       </span>
                     </div>
                     <p className="text-sm text-foreground">{comment.content}</p>
@@ -253,26 +241,23 @@ const ViewForum = () => {
               <CardTitle className="text-base">Other Discussions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {forumPosts
-                .filter((p) => p.id !== post.id)
-                .slice(0, 5)
-                .map((p) => (
-                  <Link
-                    key={p.id}
-                    to={`/view/forum/${p.id}`}
-                    className="block p-3 rounded-md hover:bg-accent transition-colors"
-                  >
-                    <p className="text-sm font-medium line-clamp-2 mb-1">
-                      {p.title}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Badge variant="outline" className="text-xs px-1.5 py-0">
-                        {p.category}
-                      </Badge>
-                      <span>{p.time}</span>
-                    </div>
-                  </Link>
-                ))}
+              {isForumListLoading && <p>Loading other discussions...</p>}
+              {isForumListError && <p>Error loading discussions</p>}
+
+              {forumList.map((p) => (
+                <Link key={p.id} to={`/view/forum/${p.id}`} className="block p-3 rounded-md hover:bg-accent transition-colors">
+                  <p className="text-sm font-medium line-clamp-2 mb-1">{p.title}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>{p.createdAt}</span>
+                  </div>
+                </Link>
+              ))}
+                {isFetchingNextPage && <CircularLoader />}
+                {hasNextPage && !isFetchingNextPage && (
+                  <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => fetchNextPage()}>
+                    Load More
+                  </Button>
+                )}
             </CardContent>
           </Card>
         </div>

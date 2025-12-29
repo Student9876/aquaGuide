@@ -5,6 +5,7 @@ import { MessageSquare, ThumbsUp, Eye } from "lucide-react";
 import { useCommunityForumPublic } from "@/hooks/useCommunityForumPublic";
 import { useState } from "react";
 import CircularLoader from "@/components/ui/CircularLoader";
+import { useNavigate } from "react-router-dom";
 
 
 
@@ -13,6 +14,8 @@ const CommunityForum = () => {
   const [pageNumber, setPageNumber] = useState(1);
 
   const { data, isLoading, isError } = useCommunityForumPublic(pageNumber);
+
+  const navigate = useNavigate();
 
   const forumPosts = data?.data ?? [];
   const totalPages = data?.pagination?.total_pages ?? 1;
@@ -41,7 +44,7 @@ const CommunityForum = () => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-3 space-y-4">
           {forumPosts.map(post => (
-            <Card key={post.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+            <Card key={post.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={()=> navigate(`/view/forum/${post.id}`)}>
               <CardHeader>
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div className="flex-1">
