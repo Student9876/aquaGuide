@@ -24,7 +24,7 @@ export const community_forum_api = {
 
   getAllCommunityForums: async (page: number) => {
     const res = await httpClient.get<getAllCommunityForum>(
-      `${BACKEND_URL}/api/community/get_all_community_forum?page=${page}`,
+      `${BACKEND_URL}/api/community/get_all_community_forums?page=${page}`,
       {
         headers: { useAuth: true },
       }
