@@ -3,7 +3,6 @@ import {
     getAllMessages,
     getRecentMessages,
     getUserMessages,
-    getChatStatistics,
 } from "../controllers/community_chat.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 
@@ -17,7 +16,6 @@ const router = express.Router();
 
 // Public routes
 router.get("/recent", getRecentMessages);
-router.get("/stats", getChatStatistics);
 
 // Protected routes
 router.get("/", protectRoute, getAllMessages);

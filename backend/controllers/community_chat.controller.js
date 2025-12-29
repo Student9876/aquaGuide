@@ -51,7 +51,18 @@ export const getAllMessages = async (req, res) => {
                     attributes: ["id", "userid", "name"],
                 },
             ],
+            attributes: {
+                include:[
+
+                [sequelize.col('User.userid'),
+                    "username"
+                ],
+            ]},
+            offset,
+            subquery: false,
+            limit,
             order: [["created_at", "DESC"]],
+            
         });
 
         res.status(200).json({
@@ -131,44 +142,5 @@ export const getUserMessages = async (req, res) => {
     } catch (error) {
         console.error("Error fetching user messages:", error);
         res.status(500).json({ error: "Failed to fetch messages" });
-    }
-};
-
-// Get messages statistics
-export const getChatStatistics = async (req, res) => {
-    try {
-        const totalMessages = await CommunityChat.count({
-            where: { is_deleted: false },
-        });
-
-        const totalUsers = await CommunityChat.count({
-            distinct: true,
-            col: "user_id",
-            where: { is_deleted: false },
-        });
-
-        const messagesPerDay = await CommunityChat.findAll({
-            attributes: [
-                [sequelize.fn("DATE", sequelize.col("created_at")), "date"],
-                [sequelize.fn("COUNT", sequelize.col("id")), "count"],
-            ],
-            where: { is_deleted: false },
-            group: [sequelize.fn("DATE", sequelize.col("created_at"))],
-            order: [[sequelize.fn("DATE", sequelize.col("created_at")), "DESC"]],
-            raw: true,
-            limit: 30,
-        });
-
-        res.status(200).json({
-            success: true,
-            data: {
-                totalMessages,
-                totalUsers,
-                messagesPerDay,
-            },
-        });
-    } catch (error) {
-        console.error("Error fetching chat statistics:", error);
-        res.status(500).json({ error: "Failed to fetch statistics" });
     }
 };

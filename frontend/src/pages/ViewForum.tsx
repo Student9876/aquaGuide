@@ -21,6 +21,8 @@ const ViewForum = () => {
   const { id } = useParams<{ id: string }>();
 
   const isAuthenticated = !!localStorage.getItem("access_token");
+  const navigate = useNavigate();
+
 
   const redirectToLogin = () => {
   navigate("/login", {
@@ -42,24 +44,21 @@ const ViewForum = () => {
   isError: isForumListError,
 } = useCommunityForumPublicInfinite();
 
-  const navigate = useNavigate();
 
   const queryClient = useQueryClient();
 
   const voteMutation = useMutation({
     mutationFn: (type: "up" | "down") => {
-      if (type === "up") {
-        return community_forum_api.likeCommunity({ forum_id: id! });
-      } else {
-        return community_forum_api.dislikeCommunity({ forum_id: id! });
-      }
+      return type === "up"
+        ? community_forum_api.likeCommunity({ forum_id: id! })
+        : community_forum_api.dislikeCommunity({ forum_id: id! });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["communityForumbyId", id],
       });
     },
-  })
+  });
 
   const addCommentMutation = useMutation({
   mutationFn: (content: string) =>
@@ -78,10 +77,16 @@ const ViewForum = () => {
   const forumList = forumListData?.pages.flatMap(page => page.data) ?? [];
   const comments = forumResponse?.comments || [];
 
-  if (!forumPost) {
+  if (isLoadingPost) {
+    return <CircularLoader />;
+  }
+
+    if (isErrorPost) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
-        <h1 className="text-2xl font-bold mb-4">Forum post not found</h1>
+        <h1 className="text-2xl font-bold mb-4 text-red-600">
+          Failed to load the forum post. Please try again later.
+        </h1>
         <Button onClick={() => navigate("/community-forum")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Forum
@@ -90,20 +95,12 @@ const ViewForum = () => {
     );
   }
 
-
-
-  if (isLoadingPost) {
-    return <CircularLoader />;
-  }
-
-  if (isErrorPost) {
+  if (!forumPost) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
-        <h1 className="text-2xl font-bold mb-4 text-red-600">
-          Failed to load the forum post. Please try again later.
-        </h1>
+        <h1 className="text-2xl font-bold mb-4">Forum post not found</h1>
         <Button onClick={() => navigate("/community-forum")}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
+          <ArrowLeft className="h-4 w-4 mr-2" onClick={() => navigate("/get_all_approved_community_forums")}/>
           Back to Forum
         </Button>
       </div>
@@ -178,7 +175,7 @@ const handleSubmitComment = () => {
                   onClick={() => handlevote("down")}
                   className="gap-2"
                 >
-                  <ThumbsDown className="h-4 w-4" onClick={() => handlevote("down")} />
+                  <ThumbsDown className="h-4 w-4" />
                   <span>{forumPost.dislike.length}</span>
                 </Button>
               </div>
