@@ -1,6 +1,7 @@
 import {
   CommentPayload,
   CommentResponse,
+  approvalIds,
   CommunityApproveRejectDeleteResponse,
   CommunityForumDetailResponse,
   CommunityForumPayload,
@@ -36,19 +37,23 @@ export const community_forum_api = {
         return res.data;
     },
 
-    approveCommunity: async (forum_id: string)=>{
-        const res = await httpClient.put<CommunityApproveRejectDeleteResponse>(`/api/community/approve_community?forum_id=${forum_id}`,{
+    approveCommunity: async (data: approvalIds)=>{
+        const res = await httpClient.put<CommunityApproveRejectDeleteResponse>(`/api/community/approve_community`,data,{
             headers: {useAuth: true},
         });
         return res.data;
     },
 
-    rejectCommunity: async (forum_id: string)=>{
-        const res = await httpClient.put<CommunityApproveRejectDeleteResponse>(`/api/community/reject_community?forum_id=${forum_id}`,{
-            headers: {useAuth: true},
-        });
-        return res.data;
-    },
+  rejectCommunity: async (data: approvalIds) => {
+    const res = await httpClient.put<CommunityApproveRejectDeleteResponse>(
+      `/api/community/reject_community`,
+      data,
+      {
+        headers: { useAuth: true },
+      }
+    );
+    return res.data;
+  },
 
     approveRejectionRequest: async (forum_id: string)=>{
         const res = await httpClient.put<CommunityApproveRejectDeleteResponse>(`/api/community/approve_rejection_request?forum_id=${forum_id}`,{
@@ -57,12 +62,16 @@ export const community_forum_api = {
         return res.data;
     },
 
-    deleteCommunityForum: async (forum_id: string)=>{
-        const res = await httpClient.delete<CommunityApproveRejectDeleteResponse>(`/api/community/delete_community_forum?forum_id=${forum_id}`,{
-            headers: {useAuth: true},
-        });
-        return res.data;
-    },
+  deleteCommunityForum: async (data: approvalIds) => {
+    const res = await httpClient.post<CommunityApproveRejectDeleteResponse>(
+      `/api/community/delete_community_forum`,
+      data,
+      {
+        headers: { useAuth: true },
+      }
+    );
+    return res.data;
+  },
 
     deleteComment: async (comment_id: string)=>{
         const res = await httpClient.delete<CommunityApproveRejectDeleteResponse>(`/api/community/comment?comment_id=${comment_id}`, {

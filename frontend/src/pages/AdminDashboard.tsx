@@ -19,6 +19,7 @@ import ManageVideoGuides from "@/components/admin/ManageVideoGuides";
 import ManageUsers from "@/components/admin/ManageUsers";
 import ManageSpecies from "@/components/admin/ManageSpecies";
 import { DashboardContent } from "@/components/admin/DashboardContent";
+import ManageCommunityForum from "@/components/admin/ManageCommunityForum";
 
 type TabType =
   | "dashboard"
@@ -98,7 +99,7 @@ const AdminDashboard = () => {
       case "manage-users":
         return <ManageUsers />;
       case "manage-forum":
-        return <ManageForumContent />;
+        return <ManageCommunityForum placeholder={"Start typing"} />;
       case "manage-text-guides":
         return <ManageTextGuides placeholder={"Start typing"} />;
       case "manage-video-guides":

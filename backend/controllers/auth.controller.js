@@ -5,6 +5,10 @@ import User from "../models/user.model.js"; // Sequelize model
 import VideoGuide from "../models/video.model.js";
 import TextModel from "../models/text.model.js";
 import axios from "axios";
+import {
+  getClientIp,
+  getGeoFromRequest,
+} from "../utils/location.util.js";
 // --------------------
 // Token Helpers
 // --------------------
@@ -53,6 +57,11 @@ export const signup = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // 🌍 IP & location
+    const ipAddress = getClientIp(req);
+    const location = getGeoFromRequest(req);
+
+    // 👤 Create user with location data
     const user = await User.create({
       name,
       userid,
@@ -61,12 +70,21 @@ export const signup = async (req, res) => {
       dob,
       gender,
       role,
+      ip_address: ipAddress,
+      country_code: location?.country_code ?? null,
+      region: location?.region ?? null,
+      latitude: location?.latitude ?? null,
+      longitude: location?.longitude ?? null,
+      last_seen: new Date(),
     });
 
+    // 🔑 Tokens
     const { accessToken, refreshToken } = generateTokens(user.id);
     setCookies(res, accessToken, refreshToken);
 
+    // ✅ Response
     res.status(201).json({
+      message: "User created successfully",
       user: {
         id: user.id,
         userid: user.userid,
@@ -74,7 +92,6 @@ export const signup = async (req, res) => {
         email: user.email,
         role: user.role,
       },
-      message: "User created successfully",
     });
   } catch (error) {
     console.error("Error in signup:", error);
