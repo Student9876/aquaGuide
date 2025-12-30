@@ -41,7 +41,7 @@ const router = express.Router();
  *         description: List of all community forums
  */
 router.get(
-  "/get_all_community_forums",
+  "/get_all_community_forum",
   protectRoute,
   adminRoute,
   get_community_forum

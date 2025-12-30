@@ -17,6 +17,5 @@ export const COMMUNITY_URLS = {
   LIKE: "/api/community/like",
   DISLIKE: "/api/community/dislike",
 
-  ADD_COMMENT: (forum_id: string) =>
-    `/api/community/add_comment/${forum_id}`,
+  ADD_COMMENT: (forum_id: string) => `/api/community/add_comment/${forum_id}`,
 };
