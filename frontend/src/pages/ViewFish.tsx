@@ -117,7 +117,7 @@ const ViewFish = () => {
     range: `${fish.min_ph} - ${fish.max_ph}`,
     description: "Light Green - Ideal for most community fish",
     note: "Match this color when testing your aquarium water",
-    link: "/ph-guide", // Replace with your actual link
+    link: "/phguide", // Replace with your actual link
     nature: phNature,
   };
 

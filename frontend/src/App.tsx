@@ -146,7 +146,7 @@ const App = () => {
               />
             </Route>
             <Route
-              path="/ph-guide"
+              path="/phguide"
               element={
                 <Layout>
                   <PhGuide />
