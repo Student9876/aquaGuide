@@ -19,18 +19,7 @@ const router = express.Router();
 
 
 
-/**
- * @swagger
- * /api/species-management:
- *   get:
- *     summary: Get all species for management
- *     tags: [SpeciesManagement]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Species management list retrieved
- */
+// Get all species for management
 router.get(
   "/species-management",
   protectRoute,
@@ -39,27 +28,7 @@ router.get(
 );
 
 
-
-/**
- * @swagger
- * /api/species-management/new:
- *   post:
- *     summary: Add a new species
- *     tags: [SpeciesManagement]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *     responses:
- *       201:
- *         description: Species created successfully
- *       400:
- *         description: Invalid data
- */
+// Add a new species
 router.post(
   "/species-management/new",
   protectRoute,
@@ -69,28 +38,7 @@ router.post(
 
 
 
-/**
- * @swagger
- * /api/species-management/{fish_id}:
- *   put:
- *     summary: Edit species by ID
- *     tags: [SpeciesManagement]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: fish_id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *     responses:
- *       200:
- *         description: Species updated
- *       404:
- *         description: Species not found
- */
+// Edit species by ID
 router.put(
   "/species-management/:fish_id",
   protectRoute,
@@ -99,27 +47,7 @@ router.put(
 );
 
 
-
-/**
- * @swagger
- * /api/species-management/{fish_id}:
- *   delete:
- *     summary: Delete species by ID
- *     tags: [SpeciesManagement]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: fish_id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       204:
- *         description: Species deleted
- *       404:
- *         description: Species not found
- */
+// Delete species by ID
 router.delete(
   "/species-management/:fish_id",
   protectRoute,
@@ -127,6 +55,7 @@ router.delete(
   deleteSpecies
 );
 
+// Search species
 router.get(
   "/species/search",
   protectRoute,

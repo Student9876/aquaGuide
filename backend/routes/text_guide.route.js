@@ -143,43 +143,14 @@ router.put(
   approve_or_reject_rejection_request
 );
 
-/**
- * @swagger
- * /api/approve_or_reject_text_guide/{id}:
- *   put:
- *     summary: Approve or reject a text guide (support only)
- *     tags: [TextGuide]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *     responses:
- *       200:
- *         description: Guide status updated
- */
+// Approve or reject a text guide (support only)
 router.put(
   "/approve_or_reject_text_guide/:id",
   protectRoute,
   supportOnlyRoute,
   approve_or_reject_for_support
 );
-
-/**
- * @swagger
- * /api/text_guides/bulk_action:
- *   post:
- *     summary: Bulk approve or reject text guides (admin only)
- *     tags: [TextGuide]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *     responses:
- *       200:
- *         description: Bulk action completed
- */
+// Bulk approve or reject text guides (admin only)
 router.post(
   "/text_guides/bulk_action",
   protectRoute,
@@ -187,24 +158,7 @@ router.post(
   bulk_action_text_guides
 );
 
-/**
- * @swagger
- * /api/text_guide/{id}:
- *   put:
- *     summary: Update a text guide (admin or owner)
- *     tags: [TextGuide]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *     requestBody:
- *       required: true
- *     responses:
- *       200:
- *         description: Guide updated
- */
+// Update a text guide (admin or owner)
 router.put(
   "/text_guide/:id",
   protectRoute,
@@ -212,22 +166,8 @@ router.put(
   update_text_guide
 );
 
-/**
- * @swagger
- * /api/text_guide/{id}:
- *   delete:
- *     summary: Delete a text guide (admin only)
- *     tags: [TextGuide]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *     responses:
- *       200:
- *         description: Guide deleted
- */
+// Delete a text guide (admin only)
+
 
 //sayantan
 router.post("/text_guide_delete", protectRoute, adminRoute, delete_text_guide);
