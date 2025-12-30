@@ -239,15 +239,17 @@ const ManageCommunityForum = ({ placeholder }) => {
           </div>
           <div className="space-y-2">
             <Label htmlFor="guide-content">Forum Content</Label>
-            <JoditEditor
-              ref={editor}
-              value={content}
-              config={config}
-              tabIndex={1} // tabIndex of textarea
-              onBlur={(newContent) => setContent(newContent)} // preferred to use only this option to update the content for performance reasons
-              onChange={(newContent) => setTextGuide(newContent)}
-              className="text-black"
-            />
+            <div className="text-black">
+              <JoditEditor
+                ref={editor}
+                value={content}
+                config={config}
+                tabIndex={1} // tabIndex of textarea
+                onBlur={(newContent) => setContent(newContent)} // preferred to use only this option to update the content for performance reasons
+                onChange={(newContent) => setTextGuide(newContent)}
+                className="text-black"
+              />
+            </div>
           </div>
           <Button onClick={handleCreate} className="w-full sm:w-auto">
             Post Forum
