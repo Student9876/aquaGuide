@@ -5,17 +5,14 @@ import User from "../models/user.model.js"; // Sequelize model
 import VideoGuide from "../models/video.model.js";
 import TextModel from "../models/text.model.js";
 import axios from "axios";
-import {
-  getClientIp,
-  getGeoFromRequest,
-} from "../utils/location.util.js";
+import { getClientIp, getGeoFromRequest } from "../utils/location.util.js";
 // --------------------
 // Token Helpers
 // --------------------
 
 const generateTokens = (userId) => {
   const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "15m", // 15 minutes
+    expiresIn: "1d",
   });
   const refreshToken = jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET, {
     expiresIn: "7d", // 7 days
@@ -186,7 +183,7 @@ export const login = async (req, res) => {
         status: user.status,
         accessToken: accessToken,
         refreshToken: refreshToken,
-        tokenExpiry: Date.now() + 60 * 60 * 1000,
+        tokenExpiry: Date.now() + 24 * 60 * 60 * 1000,
       },
     });
   } catch (error) {
