@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Plus, Search, Users, Send, Menu } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Search, Users, Send, Menu, MessageCircle } from "lucide-react";
 
 const communities = [
   {
@@ -139,128 +140,161 @@ const SidebarContent = ({
   filteredUsers: typeof recentChats;
   onSelectChat?: () => void;
 }) => (
-  <div className="flex flex-col h-full">
-    {/* Create Community */}
-    <div className="p-4 border-b">
-      <Button variant="ocean" className="w-full">
-        <Plus className="mr-2 h-4 w-4" />
-        Create Community
-      </Button>
-    </div>
-
-    {/* Search Community */}
-    <div className="p-4 border-b">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search community..."
-          value={communitySearch}
-          onChange={(e) => setCommunitySearch(e.target.value)}
-          className="pl-9"
-        />
+  <div className="flex flex-col h-full overflow-hidden">
+    <Tabs
+      defaultValue="community"
+      className="flex flex-col flex-1 h-full overflow-hidden"
+    >
+      <div className="p-3 border-b flex-shrink-0">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="community" className="flex items-center gap-1.5">
+            <Users className="h-4 w-4" />
+            Community
+          </TabsTrigger>
+          <TabsTrigger value="user" className="flex items-center gap-1.5">
+            <MessageCircle className="h-4 w-4" />
+            User
+          </TabsTrigger>
+        </TabsList>
       </div>
 
-      {/* Community List */}
-      <ScrollArea className="h-32 mt-3">
-        <div className="space-y-1">
-          {filteredCommunities.map((community) => (
-            <div
-              key={community.id}
-              onClick={() => {
-                setSelectedChat({
-                  id: community.id,
-                  name: community.name,
-                  type: "community",
-                });
-                onSelectChat?.();
-              }}
-              className={`p-2 rounded-lg cursor-pointer transition-colors ${
-                selectedChat?.id === community.id &&
-                selectedChat?.type === "community"
-                  ? "bg-primary/10 border border-primary/20"
-                  : "hover:bg-accent"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-primary" />
-                <span className="font-medium text-sm truncate">
-                  {community.name}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground truncate ml-6">
-                {community.lastMessage}
-              </p>
-            </div>
-          ))}
+      {/* Community Tab */}
+      <TabsContent
+        value="community"
+        className=" flex flex-col m-0 min-h-0 overflow-hidden "
+      >
+        <div className="p-4 border-b">
+          <Button variant="ocean" className="w-full">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Community
+          </Button>
         </div>
-      </ScrollArea>
-    </div>
 
-    {/* Search User */}
-    <div className="p-4 flex-1 flex flex-col min-h-0">
-      <div className="relative flex-shrink-0">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search user..."
-          value={userSearch}
-          onChange={(e) => setUserSearch(e.target.value)}
-          className="pl-9"
-        />
-      </div>
+        <div className="p-4  flex flex-col min-h-0 ">
+          <div className="relative flex-shrink-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search community..."
+              value={communitySearch}
+              onChange={(e) => setCommunitySearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
 
-      {/* User Chats List */}
-      <ScrollArea className="flex-1 mt-3">
-        <div className="space-y-1 pr-2">
-          {filteredUsers.map((chat) => (
-            <div
-              key={chat.id}
-              onClick={() => {
-                setSelectedChat({ id: chat.id, name: chat.name, type: "user" });
-                onSelectChat?.();
-              }}
-              className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                selectedChat?.id === chat.id && selectedChat?.type === "user"
-                  ? "bg-primary/10 border border-primary/20"
-                  : "hover:bg-accent"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-                      <span className="text-xs font-medium">
-                        {chat.name.charAt(0)}
-                      </span>
+          <ScrollArea className="flex-1 mt-3 ">
+            <div className="space-y-1 pr-2 ">
+              {filteredCommunities.map((community) => (
+                <div
+                  key={community.id}
+                  onClick={() => {
+                    setSelectedChat({
+                      id: community.id,
+                      name: community.name,
+                      type: "community",
+                    });
+                    onSelectChat?.();
+                  }}
+                  className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                    selectedChat?.id === community.id &&
+                    selectedChat?.type === "community"
+                      ? "bg-primary/10 border border-primary/20"
+                      : "hover:bg-accent"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-primary" />
+                    <span className="font-medium text-sm truncate">
+                      {community.name}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate ml-6">
+                    {community.lastMessage}
+                  </p>
+                  <p className="text-xs text-primary/70 ml-6">
+                    {community.online} online
+                  </p>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
+      </TabsContent>
+
+      {/* User Tab */}
+      <TabsContent
+        value="user"
+        className="flex-1 flex flex-col m-0 min-h-0 overflow-hidden data-[state=active]:flex-1"
+      >
+        <div className="p-4 flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className="relative flex-shrink-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search user..."
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
+          <ScrollArea className="flex-1 mt-3">
+            <div className="space-y-1 pr-2">
+              {filteredUsers.map((chat) => (
+                <div
+                  key={chat.id}
+                  onClick={() => {
+                    setSelectedChat({
+                      id: chat.id,
+                      name: chat.name,
+                      type: "user",
+                    });
+                    onSelectChat?.();
+                  }}
+                  className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                    selectedChat?.id === chat.id &&
+                    selectedChat?.type === "user"
+                      ? "bg-primary/10 border border-primary/20"
+                      : "hover:bg-accent"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="relative">
+                        <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
+                          <span className="text-xs font-medium">
+                            {chat.name.charAt(0)}
+                          </span>
+                        </div>
+                        {chat.online && (
+                          <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-background" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-medium text-sm block truncate">
+                          {chat.name}
+                        </span>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {chat.lastMessage}
+                        </p>
+                      </div>
                     </div>
-                    {chat.online && (
-                      <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-background" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="font-medium text-sm block truncate">
-                      {chat.name}
-                    </span>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {chat.lastMessage}
-                    </p>
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      <span className="text-xs text-muted-foreground">
+                        {chat.time}
+                      </span>
+                      {chat.unread > 0 && (
+                        <span className="bg-primary text-primary-foreground text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                          {chat.unread}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  <span className="text-xs text-muted-foreground">
-                    {chat.time}
-                  </span>
-                  {chat.unread > 0 && (
-                    <span className="bg-primary text-primary-foreground text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
-                      {chat.unread}
-                    </span>
-                  )}
-                </div>
-              </div>
+              ))}
             </div>
-          ))}
+          </ScrollArea>
         </div>
-      </ScrollArea>
-    </div>
+      </TabsContent>
+    </Tabs>
   </div>
 );
 
@@ -295,7 +329,7 @@ const CommunityChat = () => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-120px)] min-h-[500px] border rounded-lg overflow-hidden bg-card">
+    <div className="flex h-[calc(100vh-200px)] min-h-[500px] border rounded-lg overflow-hidden bg-card">
       {/* Desktop Sidebar */}
       <div className="hidden md:flex w-80 border-r flex-col bg-muted/30">
         <SidebarContent {...sidebarProps} />
