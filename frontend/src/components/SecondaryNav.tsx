@@ -28,7 +28,7 @@ const SecondaryNav = () => {
     navItems.find((item) => item.path === location.pathname) || navItems[0];
 
   return (
-    <nav className="border-b bg-card">
+    <nav className="border-b bg-card fixed top-[66px] w-[100vw] z-[12]">
       <div className="container mx-auto px-4">
         {/* Mobile & Tablet Dropdown */}
         <div className="lg:hidden py-2">

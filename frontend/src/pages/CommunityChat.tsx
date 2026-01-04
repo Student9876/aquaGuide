@@ -329,7 +329,7 @@ const CommunityChat = () => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-200px)] min-h-[500px] border rounded-lg overflow-hidden bg-card">
+    <div className="flex h-[calc(100vh-130px)] min-h-[500px] border rounded-lg overflow-hidden bg-card">
       {/* Desktop Sidebar */}
       <div className="hidden md:flex w-80 border-r flex-col bg-muted/30">
         <SidebarContent {...sidebarProps} />
