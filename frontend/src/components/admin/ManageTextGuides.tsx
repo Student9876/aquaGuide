@@ -40,37 +40,6 @@ interface TextGuides {
   submittedOn: string;
 }
 
-const mockGuides: TextGuides[] = [
-  {
-    id: "1",
-    name: "Beginner's Guide to Freshwater Tanks",
-    author: "John Doe",
-    status: "pending",
-    submittedOn: "2024-01-15",
-  },
-  {
-    id: "2",
-    name: "Saltwater Aquarium Setup",
-    author: "Jane Smith",
-    status: "approved",
-    submittedOn: "2024-01-12",
-  },
-  {
-    id: "3",
-    name: "Fish Feeding Best Practices",
-    author: "Mike Johnson",
-    status: "rejected",
-    submittedOn: "2024-01-10",
-  },
-  {
-    id: "4",
-    name: "Tank Cycling 101",
-    author: "Sarah Williams",
-    status: "pending",
-    submittedOn: "2024-01-08",
-  },
-];
-
 const ManageTextGuides = ({ placeholder }) => {
   const [selectedGuides, setSelectedGuides] = useState<string[]>([]);
   const [title, setTitle] = useState("");

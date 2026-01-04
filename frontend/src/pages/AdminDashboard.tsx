@@ -8,6 +8,7 @@ import {
   Fish,
   MessagesSquare,
   Activity,
+  MessageCircleQuestion,
   Menu,
   X,
 } from "lucide-react";
@@ -29,7 +30,8 @@ type TabType =
   | "manage-video-guides"
   | "manage-species"
   | "manage-chat"
-  | "live-users";
+  | "live-users"
+  | "faq";
 
 const sidebarItems = [
   { id: "dashboard" as TabType, label: "Dashboard", icon: LayoutDashboard },
@@ -56,6 +58,7 @@ const sidebarItems = [
     icon: MessagesSquare,
   },
   { id: "live-users" as TabType, label: "Live Users Data", icon: Activity },
+  { id: "faq" as TabType, label: "Manage Faq", icon: MessageCircleQuestion },
 ];
 
 const AdminDashboard = () => {
@@ -109,6 +112,8 @@ const AdminDashboard = () => {
       case "manage-chat":
         return <ManageChatContent />;
       case "live-users":
+        return <LiveUsersContent />;
+      case "faq":
         return <LiveUsersContent />;
       default:
         return <DashboardContent />;
