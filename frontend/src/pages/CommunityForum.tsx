@@ -44,7 +44,7 @@ const CommunityForum = () => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-3 space-y-4">
           {forumPosts.map(post => (
-            <Card key={post.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={()=> navigate(`/get_community_forum_by_id/${post.id}`)}>
+            <Card key={post.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={()=> navigate(`/view/forum/${post.id}`)}>
               <CardHeader>
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div className="flex-1">

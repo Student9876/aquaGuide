@@ -1,13 +1,27 @@
-import express from "express"
+import express from "express";
 import {
-    add_comment_to_forum, approve_community, create_community_forum, delete_comment, delete_Community_forum, dislike_community,
-    get_approved_community_forum, get_community_form_by_id, get_community_forum, image_upload, like_community,
-    reject_community, rejection_approval
-} from "../controllers/community_forum.controller.js"
-import { adminRoute, protectRoute, supportOrAdminRoute } from "../middleware/auth.middleware.js"
-import upload from "../middleware/file_upload.middleware.js"
+  add_comment_to_forum,
+  approve_community,
+  create_community_forum,
+  delete_comment,
+  delete_Community_forum,
+  dislike_community,
+  get_approved_community_forum,
+  get_community_form_by_id,
+  get_community_forum,
+  image_upload,
+  like_community,
+  reject_community,
+  rejection_approval,
+} from "../controllers/community_forum.controller.js";
+import {
+  adminRoute,
+  protectRoute,
+  supportOrAdminRoute,
+} from "../middleware/auth.middleware.js";
+import upload from "../middleware/file_upload.middleware.js";
 
-const router = express.Router()
+const router = express.Router();
 
 /**
  * @swagger
@@ -26,7 +40,12 @@ const router = express.Router()
  *       200:
  *         description: List of all community forums
  */
-router.get("/get_all_community_forums",protectRoute, adminRoute, get_community_forum)
+router.get(
+  "/get_all_community_forum",
+  protectRoute,
+  adminRoute,
+  get_community_forum
+);
 
 /**
  * @swagger
@@ -38,8 +57,7 @@ router.get("/get_all_community_forums",protectRoute, adminRoute, get_community_f
  *       200:
  *         description: List of all community forums
  */
-router.get("/get_all_approved_community_forum", get_approved_community_forum)
-
+router.get("/get_all_approved_community_forum", get_approved_community_forum);
 
 /**
  * @swagger
@@ -60,8 +78,7 @@ router.get("/get_all_approved_community_forum", get_approved_community_forum)
  *       404:
  *         description: Forum not found
  */
-router.get("/get_community_forum_by_id/:id", get_community_form_by_id)
-
+router.get("/get_community_forum_by_id/:id", get_community_form_by_id);
 
 /**
  * @swagger
@@ -83,8 +100,12 @@ router.get("/get_community_forum_by_id/:id", get_community_form_by_id)
  *       500:
  *         description: Internal Server Errors
  */
-router.post("/add_community_forum",protectRoute, create_community_forum)
-
+router.post(
+  "/add_community_forum",
+  protectRoute,
+  supportOrAdminRoute,
+  create_community_forum
+);
 
 /**
  * @swagger
@@ -110,7 +131,12 @@ router.post("/add_community_forum",protectRoute, create_community_forum)
  *       404:
  *         description: Comment not found
  */
-router.delete("/delete_comment",protectRoute, supportOrAdminRoute, delete_comment)
+router.delete(
+  "/delete_comment",
+  protectRoute,
+  supportOrAdminRoute,
+  delete_comment
+);
 
 /**
  * @swagger
@@ -146,12 +172,11 @@ router.delete("/delete_comment",protectRoute, supportOrAdminRoute, delete_commen
  *       404:
  *         description: Forum not found
  */
-router.post("/add_comment/:forum_id", protectRoute, add_comment_to_forum)
+router.post("/add_comment/:forum_id", protectRoute, add_comment_to_forum);
 
-router.put("/like", protectRoute, like_community)
+router.put("/like", protectRoute, like_community);
 
-router.put("/dislike", protectRoute, dislike_community)
-
+router.put("/dislike", protectRoute, dislike_community);
 
 /**
  * @swagger
@@ -176,8 +201,7 @@ router.put("/dislike", protectRoute, dislike_community)
  *       404:
  *         description: Comment not found
  */
-router.delete("/comment", protectRoute, delete_comment)
-
+router.delete("/comment", protectRoute, delete_comment);
 
 /**
  * @swagger
@@ -203,8 +227,12 @@ router.delete("/comment", protectRoute, delete_comment)
  *       400:
  *         description: File Not found or invalid file format
  */
-router.post("/image_upload", supportOrAdminRoute, upload.single("image"), image_upload)
-
+router.post(
+  "/image_upload",
+  supportOrAdminRoute,
+  upload.single("image"),
+  image_upload
+);
 
 /**
  * @swagger
@@ -220,9 +248,12 @@ router.post("/image_upload", supportOrAdminRoute, upload.single("image"), image_
  *       404:
  *         description: Not found
  */
-router.put("/approve_community",protectRoute, supportOrAdminRoute, approve_community);
-
-
+router.put(
+  "/approve_community",
+  protectRoute,
+  supportOrAdminRoute,
+  approve_community
+);
 
 /**
  * @swagger
@@ -238,9 +269,12 @@ router.put("/approve_community",protectRoute, supportOrAdminRoute, approve_commu
  *       404:
  *         description: Not found
  */
-router.put("/reject_communtiy",protectRoute, supportOrAdminRoute, reject_community);
-
-
+router.put(
+  "/reject_community",
+  protectRoute,
+  supportOrAdminRoute,
+  reject_community
+);
 
 /**
  * @swagger
@@ -256,8 +290,18 @@ router.put("/reject_communtiy",protectRoute, supportOrAdminRoute, reject_communi
  *       404:
  *         description: Not found
  */
-router.put("/approve_rejection_request",protectRoute, adminRoute, rejection_approval);
+router.put(
+  "/approve_rejection_request",
+  protectRoute,
+  adminRoute,
+  rejection_approval
+);
 
-router.delete("/delete_community_forum", protectRoute, adminRoute, delete_Community_forum)
+router.post(
+  "/delete_community_forum",
+  protectRoute,
+  adminRoute,
+  delete_Community_forum
+);
 
 export default router;

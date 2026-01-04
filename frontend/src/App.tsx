@@ -29,6 +29,7 @@ import { setRole } from "./store/userSlice";
 import ViewTextGuide from "./pages/ViewTextGuide";
 import ViewFish from "./pages/ViewFish";
 import ViewForum from "./pages/ViewForum";
+import PhGuide from "./pages/PhGuide";
 
 const queryClient = new QueryClient();
 
@@ -134,15 +135,6 @@ const App = () => {
               }
             />
 
-            <Route
-              path = "/get_community_forum_by_id/:id"
-              element={
-                <Layout>
-                  <ViewForum />
-                </Layout>
-              }
-            />
-
             <Route element={<PrivateRoute />}>
               <Route
                 path="/profile"
@@ -153,6 +145,14 @@ const App = () => {
                 }
               />
             </Route>
+            <Route
+              path="/phguide"
+              element={
+                <Layout>
+                  <PhGuide />
+                </Layout>
+              }
+            />
             {role === "admin" || role === "support" ? (
               <Route element={<PrivateRoute />}>
                 <Route

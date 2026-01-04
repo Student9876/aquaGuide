@@ -15,6 +15,7 @@ import {
 import { protectRoute, adminRoute,optionalProtectRoute } from "../middleware/auth.middleware.js";
 import { heartbeat } from "../controllers/heartbeat.controller.js";
 import { createGuest } from "../controllers/guest.controller.js";
+import { getUserLocations} from "../controllers/user.locationController.js"
 
 const router = express.Router();
 
@@ -259,4 +260,5 @@ router.get("/getLocation", getUserLocation);
 router.post("/heartbeat",optionalProtectRoute,heartbeat );
 
 router.post("/guestCreate", createGuest);
+
 export default router;

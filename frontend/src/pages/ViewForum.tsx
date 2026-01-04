@@ -20,10 +20,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 const ViewForum = () => {
   const { id } = useParams<{ id: string }>();
 
-  const isAuthenticated = !!localStorage.getItem("access_token");
+  const isAuthenticated = !!localStorage.getItem("accessToken");
   const navigate = useNavigate();
 
-
+  console.log(isAuthenticated)
+  
   const redirectToLogin = () => {
   navigate("/login", {
     state: { from: location.pathname },
@@ -77,7 +78,7 @@ const ViewForum = () => {
   const forumList = forumListData?.pages.flatMap(page => page.data) ?? [];
   const comments = forumResponse?.comments || [];
 
-  if (isLoadingPost) {
+    if (isLoadingPost) {
     return <CircularLoader />;
   }
 
@@ -95,17 +96,20 @@ const ViewForum = () => {
     );
   }
 
+
   if (!forumPost) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
         <h1 className="text-2xl font-bold mb-4">Forum post not found</h1>
         <Button onClick={() => navigate("/community-forum")}>
-          <ArrowLeft className="h-4 w-4 mr-2" onClick={() => navigate("/get_all_approved_community_forums")}/>
+          <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Forum
         </Button>
       </div>
     );
   }
+
+
 
   const handlevote = (type: "up" | "down") => {
     if (!isAuthenticated) {
@@ -155,7 +159,7 @@ const handleSubmitComment = () => {
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-foreground leading-relaxed">{forumPost.content}</p>
+              <p className="text-foreground leading-relaxed" dangerouslySetInnerHTML={{__html: forumPost.content}}/>
               {/* Vote Section */}
               <div className="flex items-center gap-4 pt-4 border-t">
                 <Button
