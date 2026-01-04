@@ -21,6 +21,7 @@ export interface RegisterResponse {
   role: string;
   dob: string;
   gender: string;
+  tokenExpiry?: string;
 }
 
 export interface LoginResponse {
@@ -121,7 +122,7 @@ export interface rejectorapproveIds {
 }
 
 export interface getVideoResponse {
-  videos: VideoArray[];
+  video: VideoArray[];
   pagination: paginate;
 }
 
@@ -387,7 +388,7 @@ export interface CommentPayload {
   content: string;
 }
 
-export interface CommentResponse{
+export interface CommentResponse {
   data: Comment;
   message: string;
 }
@@ -411,7 +412,6 @@ export interface CommunityForumPayload {
   title: string;
   content: string;
 }
-
 
 export interface LikeDislikePayload {
   forum_id: string;

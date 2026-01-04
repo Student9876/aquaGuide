@@ -10,7 +10,7 @@ const userSlice = createSlice({
     email: localStorage.getItem("email") || null,
     isLoggedIn: localStorage.getItem("isLoggedIn") || null,
     userid: localStorage.getItem("userid") || null,
-    role: "user",
+    role: localStorage.getItem("role") || "user",
   },
   reducers: {
     setName: (state, action) => {
@@ -20,6 +20,7 @@ const userSlice = createSlice({
 
     setRole: (state, action) => {
       state.role = action.payload;
+      localStorage.setItem("role", action.payload);
     },
 
     setIsLoggedIn: (state, action) => {
@@ -46,19 +47,27 @@ const userSlice = createSlice({
     },
 
     setAuthData: (state, action) => {
-      const { accessToken, refreshToken, tokenExpiry, name, email, userid } =
-        action.payload;
+      const {
+        accessToken,
+        refreshToken,
+        tokenExpiry,
+        name,
+        email,
+        userid,
+        role,
+      } = action.payload;
       state.accessToken = accessToken;
       state.refreshToken = refreshToken;
       state.tokenExpiry = tokenExpiry;
       state.name = name;
       state.userid = userid;
-
+      state.role = role;
       state.email = email;
 
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("userid", userid);
+      localStorage.setItem("role", role);
 
       localStorage.setItem("tokenExpiry", tokenExpiry);
       localStorage.setItem("name", name);

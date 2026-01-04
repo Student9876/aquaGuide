@@ -31,6 +31,7 @@ import { toast } from "sonner";
 import { TextGuide } from "@/api/apiTypes";
 import { useNavigate } from "react-router-dom";
 import CircularLoader from "../ui/CircularLoader";
+import { useFaq } from "@/hooks/useFaq";
 
 interface TextGuides {
   id: string;
@@ -40,15 +41,15 @@ interface TextGuides {
   submittedOn: string;
 }
 
-const ManageTextGuides = ({ placeholder }) => {
+const ManageFaq = () => {
   const [selectedGuides, setSelectedGuides] = useState<string[]>([]);
   const [title, setTitle] = useState("");
   const [page, setPage] = useState(1);
-  const { data, isLoading, isError } = useTextGuide(page);
+  const { data, isLoading, isError } = useFaq(page);
   const totalPages = data?.pagination?.totalPages || 1;
   const editor = useRef(null);
   const queryClient = useQueryClient();
-  const [content, setContent] = useState("");
+  const [answer, setAnswer] = useState("");
   const [textGuide, setTextGuide] = useState<string>("");
   const textGuidesArray: TextGuide[] = data?.data || [];
   const navigate = useNavigate();
@@ -63,7 +64,7 @@ const ManageTextGuides = ({ placeholder }) => {
       queryClient.invalidateQueries({ queryKey: ["texts"] });
       toast.success("Text guide created successfully");
       setTitle("");
-      setContent("");
+      setAnswer("");
     },
     onError: () => {
       toast.error("Failed to create text guide");
@@ -76,7 +77,7 @@ const ManageTextGuides = ({ placeholder }) => {
       queryClient.invalidateQueries({ queryKey: ["texts"] });
       toast.success("Text guide deleted successfully");
       setTitle("");
-      setContent("");
+      setAnswer("");
     },
     onError: () => {
       toast.error("Failed to delete text guide");
@@ -89,7 +90,7 @@ const ManageTextGuides = ({ placeholder }) => {
       queryClient.invalidateQueries({ queryKey: ["texts"] });
       toast.success("Text guide deleted successfully");
       setTitle("");
-      setContent("");
+      setAnswer("");
     },
     onError: () => {
       toast.error("Failed to update text guide status");
@@ -102,20 +103,6 @@ const ManageTextGuides = ({ placeholder }) => {
       content: textGuide,
     });
   };
-
-  const config = useMemo(
-    () => ({
-      readonly: false, // all options from https://xdsoft.net/jodit/docs/,
-      placeholder: placeholder || "Start typings...",
-      height: 400,
-      style: {
-        color: "black", // default text color
-        fontFamily: "Arial, sans-serif",
-        fontSize: "14px",
-      },
-    }),
-    [placeholder]
-  );
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -150,14 +137,6 @@ const ManageTextGuides = ({ placeholder }) => {
     setSelectedGuides([]);
   };
 
-  const handlePostGuide = () => {
-    if (!title.trim() || !content.trim()) return;
-    console.log(textGuide);
-
-    setTitle("");
-    setContent("");
-  };
-
   const getStatusBadge = (status: TextGuide["status"]) => {
     const variants = {
       pending: "bg-yellow-500/20 text-yellow-600 border-yellow-500/30",
@@ -189,7 +168,7 @@ const ManageTextGuides = ({ placeholder }) => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="guide-title">Guide Title</Label>
+            <Label htmlFor="guide-title">Faq Question</Label>
             <Input
               id="guide-title"
               placeholder="Enter guide title..."
@@ -198,19 +177,16 @@ const ManageTextGuides = ({ placeholder }) => {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="guide-content">Guide Content</Label>
-            <JoditEditor
-              ref={editor}
-              value={content}
-              config={config}
-              tabIndex={1} // tabIndex of textarea
-              onBlur={(newContent) => setContent(newContent)} // preferred to use only this option to update the content for performance reasons
-              onChange={(newContent) => setTextGuide(newContent)}
-              className="text-black"
+            <Label htmlFor="guide-content">Faq Answer</Label>
+            <Textarea
+              id="faq-answer"
+              placeholder="Enter guide title..."
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
             />
           </div>
           <Button onClick={handleCreate} className="w-full sm:w-auto">
-            Post Guide
+            Post Faq
           </Button>
         </CardContent>
       </Card>
@@ -221,22 +197,7 @@ const ManageTextGuides = ({ placeholder }) => {
           <span className="text-sm text-muted-foreground self-center mr-2">
             {selectedGuides.length} selected:
           </span>
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-green-600 border-green-600 hover:bg-green-600/10"
-            onClick={() => handleBulkAction("approve")}
-          >
-            <Check className="h-4 w-4 mr-1" /> Approve
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-yellow-600 border-yellow-600 hover:bg-yellow-600/10"
-            onClick={() => handleBulkAction("reject")}
-          >
-            <X className="h-4 w-4 mr-1" /> Reject
-          </Button>
+
           <Button
             size="sm"
             variant="outline"
@@ -251,7 +212,7 @@ const ManageTextGuides = ({ placeholder }) => {
       {/* Guides Table */}
       <Card className="border-border bg-card overflow-hidden">
         <CardHeader>
-          <CardTitle className="text-lg">Submitted Guides</CardTitle>
+          <CardTitle className="text-lg">Submitted Faq</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
@@ -367,4 +328,4 @@ const ManageTextGuides = ({ placeholder }) => {
   );
 };
 
-export default ManageTextGuides;
+export default ManageFaq;

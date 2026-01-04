@@ -163,16 +163,15 @@ export const deleteSelectedVideos = async (req, res) => {
 export const getActiveVideoGuides = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = 2;
+    const limit = 10;
     const offset = (page - 1) * limit;
 
-    const { rows: videos, count: total } =
-      await VideoGuide.findAndCountAll({
-        where: { isActive: true, status: "approved" },
-        order: [["createdAt", "DESC"]],
-        limit: pageSize,
-        offset,
-      });
+    const { rows: videos, count: total } = await VideoGuide.findAndCountAll({
+      where: { isActive: true, status: "approved" },
+      order: [["createdAt", "DESC"]],
+      limit: limit,
+      offset,
+    });
 
     res.status(200).json({
       message: "Active video guides fetched successfully",
@@ -180,8 +179,8 @@ export const getActiveVideoGuides = async (req, res) => {
       pagination: {
         total_items: total,
         current_page: page,
-        totalPages: Math.ceil(total / pageSize),
-        pageSize,
+        totalPages: Math.ceil(total / limit),
+        limit,
       },
     });
   } catch (error) {
@@ -193,12 +192,11 @@ export const getActiveVideoGuides = async (req, res) => {
         total_items: 0,
         current_page: 1,
         totalPages: 0,
-        pageSize: 12,
+        pageSize: 0,
       },
     });
   }
 };
-
 
 // 🧭 Admin route: Toggle 'isActive' status
 export const toggleVideoActiveStatus = async (req, res) => {
