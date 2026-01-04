@@ -10,15 +10,6 @@ import { protectRoute, supportOrAdminRoute} from "../middleware/auth.middleware.
 
 const router = express.Router();
 
-/**
- * @swagger
- * tags:
- *   name: SpeciesManagement
- *   description: Admin and support species management routes
- */
-
-
-
 // Get all species for management
 router.get(
   "/species-management",

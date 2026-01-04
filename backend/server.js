@@ -4,10 +4,6 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { Server } from "socket.io";
 import http from "http";
-
-import swaggerUi from "swagger-ui-express";
-import swaggerJsdoc from "swagger-jsdoc";
-
 import cookieParser from "cookie-parser";
 import setupAssociations from "./models/associations.js";
 import sequelize from "./lib/db.js"; // Sequelize connection
@@ -21,6 +17,7 @@ import speciesRoutes from "./routes/species.route.js";
 import speciesPublicRoutes from "./routes/species.public.route.js";
 import textGuideRoutes from "./routes/text_guide.route.js";
 import { setupChatSocket } from "./lib/socket-handlers.js";
+import faqRoutes from "./routes/faq.route.js";
 
 dotenv.config();
 
@@ -49,6 +46,7 @@ app.use("/api/textguides", textGuideRoutes);
 app.use("/api/community", communityRoutes);
 app.use("/api/community/chat", communityChatsRoutes);
 app.use("/uploads", express.static("uploads"));
+app.use("/api/faqs", faqRoutes);
 
 app.get("/", (req, res) => {
   res.send(
