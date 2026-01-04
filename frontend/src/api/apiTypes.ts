@@ -420,3 +420,23 @@ export interface GetSpeciesDetailResponse {
   species: SpeciesItem;
   related_species: SpeciesItem[];
 }
+
+export interface FaqPayload {
+  question: string;
+  answers: string;
+}
+
+export interface QuestionItem {
+  id: string;
+  question: string;
+  answers: string;
+  created_by: string;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+}
+
+export interface FaqResponse {
+  message: string;
+  questions: QuestionItem[];
+  pagination: paginate;
+}
