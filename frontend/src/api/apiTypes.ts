@@ -122,7 +122,7 @@ export interface rejectorapproveIds {
 }
 
 export interface getVideoResponse {
-  videos: VideoArray[];
+  video: VideoArray[];
   pagination: paginate;
 }
 

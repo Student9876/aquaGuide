@@ -21,6 +21,7 @@ import ManageUsers from "@/components/admin/ManageUsers";
 import ManageSpecies from "@/components/admin/ManageSpecies";
 import { DashboardContent } from "@/components/admin/DashboardContent";
 import ManageCommunityForum from "@/components/admin/ManageCommunityForum";
+import ManageFaq from "@/components/admin/ManageFaq";
 
 type TabType =
   | "dashboard"
@@ -114,7 +115,7 @@ const AdminDashboard = () => {
       case "live-users":
         return <LiveUsersContent />;
       case "faq":
-        return <LiveUsersContent />;
+        return <ManageFaq />;
       default:
         return <DashboardContent />;
     }
