@@ -11,37 +11,44 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { useState } from "react";
-import { useCommunityForumbyId, useCommunityForumPublic, useCommunityForumPublicInfinite } from "@/hooks/useCommunityForumPublic";
+import {
+  useCommunityForumbyId,
+  useCommunityForumPublic,
+  useCommunityForumPublicInfinite,
+} from "@/hooks/useCommunityForumPublic";
 import CircularLoader from "@/components/ui/CircularLoader";
 import { community_forum_api } from "@/api/modules/community_forum";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 
 const ViewForum = () => {
   const { id } = useParams<{ id: string }>();
 
   const isAuthenticated = !!localStorage.getItem("accessToken");
-  console.log(isAuthenticated)
-  
+  console.log(isAuthenticated);
+
   const redirectToLogin = () => {
-  navigate("/login", {
-    state: { from: location.pathname },
-  });
+    navigate("/login", {
+      state: { from: location.pathname },
+    });
   };
 
-  const {data: forumResponse, isLoading: isLoadingPost, isError: isErrorPost} = useCommunityForumbyId(id!);
+  const {
+    data: forumResponse,
+    isLoading: isLoadingPost,
+    isError: isErrorPost,
+  } = useCommunityForumbyId(id!);
 
   const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
   const [newComment, setNewComment] = useState("");
 
   const {
-  data: forumListData,
-  fetchNextPage,
-  hasNextPage,
-  isFetchingNextPage,
-  isLoading: isForumListLoading,
-  isError: isForumListError,
-} = useCommunityForumPublicInfinite();
+    data: forumListData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isForumListLoading,
+    isError: isForumListError,
+  } = useCommunityForumPublicInfinite();
 
   const navigate = useNavigate();
 
@@ -60,26 +67,26 @@ const ViewForum = () => {
         queryKey: ["communityForumbyId", id],
       });
     },
-  })
+  });
 
   const addCommentMutation = useMutation({
-  mutationFn: (content: string) =>
-    community_forum_api.addComment({ content }, id!),
+    mutationFn: (content: string) =>
+      community_forum_api.addComment({ content }, id!),
 
-  onSuccess: () => {
-    setNewComment("");
+    onSuccess: () => {
+      setNewComment("");
 
-    queryClient.invalidateQueries({
-      queryKey: ["communityForumbyId", forumPost.id],
-    });
-  },
-});
+      queryClient.invalidateQueries({
+        queryKey: ["communityForumbyId", forumPost.id],
+      });
+    },
+  });
 
   const forumPost = forumResponse?.data;
-  const forumList = forumListData?.pages.flatMap(page => page.data) ?? [];
+  const forumList = forumListData?.pages.flatMap((page) => page.data) ?? [];
   const comments = forumResponse?.comments || [];
 
-    if (isLoadingPost) {
+  if (isLoadingPost) {
     return <CircularLoader />;
   }
 
@@ -97,7 +104,6 @@ const ViewForum = () => {
     );
   }
 
-
   if (!forumPost) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
@@ -110,26 +116,24 @@ const ViewForum = () => {
     );
   }
 
-
-
   const handlevote = (type: "up" | "down") => {
     if (!isAuthenticated) {
       redirectToLogin();
       return;
     }
-    setUserVote(prev => prev === type ? null : type);
+    setUserVote((prev) => (prev === type ? null : type));
     voteMutation.mutate(type);
-  }
+  };
 
-const handleSubmitComment = () => {
-  if (!isAuthenticated) {
-    redirectToLogin();
-    return;
-  }
-  if (!newComment.trim()) return;
+  const handleSubmitComment = () => {
+    if (!isAuthenticated) {
+      redirectToLogin();
+      return;
+    }
+    if (!newComment.trim()) return;
 
-  addCommentMutation.mutate(newComment);
-};
+    addCommentMutation.mutate(newComment);
+  };
   return (
     <div className="container mx-auto px-4 py-8 lg:py-12">
       <Button
@@ -160,7 +164,10 @@ const handleSubmitComment = () => {
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-foreground leading-relaxed" dangerouslySetInnerHTML={{__html: forumPost.content}}/>
+              <p
+                className="text-foreground leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: forumPost.content }}
+              />
               {/* Vote Section */}
               <div className="flex items-center gap-4 pt-4 border-t">
                 <Button
@@ -180,7 +187,10 @@ const handleSubmitComment = () => {
                   onClick={() => handlevote("down")}
                   className="gap-2"
                 >
-                  <ThumbsDown className="h-4 w-4" onClick={() => handlevote("down")} />
+                  <ThumbsDown
+                    className="h-4 w-4"
+                    onClick={() => handlevote("down")}
+                  />
                   <span>{forumPost.dislike.length}</span>
                 </Button>
               </div>
@@ -245,19 +255,30 @@ const handleSubmitComment = () => {
               {isForumListError && <p>Error loading discussions</p>}
 
               {forumList.map((p) => (
-                <Link key={p.id} to={`/view/forum/${p.id}`} className="block p-3 rounded-md hover:bg-accent transition-colors">
-                  <p className="text-sm font-medium line-clamp-2 mb-1">{p.title}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Link
+                  key={p.id}
+                  to={`/view/forum/${p.id}`}
+                  className="block p-3 rounded-md hover:bg-accent transition-colors"
+                >
+                  <p className="text-sm font-medium line-clamp-2 mb-1">
+                    {p.title}
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>{p.createdAt}</span>
                   </div>
                 </Link>
               ))}
-                {isFetchingNextPage && <CircularLoader />}
-                {hasNextPage && !isFetchingNextPage && (
-                  <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => fetchNextPage()}>
-                    Load More
-                  </Button>
-                )}
+              {isFetchingNextPage && <CircularLoader />}
+              {hasNextPage && !isFetchingNextPage && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-2"
+                  onClick={() => fetchNextPage()}
+                >
+                  Load More
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>
