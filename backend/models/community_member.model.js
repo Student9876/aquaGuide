@@ -1,12 +1,11 @@
-// models/community_message.model.js
 import { DataTypes, Model } from "sequelize";
 import sequelize from "../lib/db.js";
 import User from "./user.model.js";
 import Community from "./community.model.js";
 
-class CommunityMessage extends Model {}
+class CommunityMember extends Model {}
 
-CommunityMessage.init(
+CommunityMember.init(
   {
     id: {
       type: DataTypes.UUID,
@@ -21,7 +20,6 @@ CommunityMessage.init(
         model: Community,
         key: "id",
       },
-      onDelete: "CASCADE",
     },
 
     user_id: {
@@ -31,39 +29,22 @@ CommunityMessage.init(
         model: User,
         key: "id",
       },
-      onDelete: "CASCADE",
     },
 
-    message: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-      validate: {
-        len: [1, 5000],
-      },
-    },
-
-    edited_at: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
-
-    is_deleted: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
+    role: {
+      type: DataTypes.ENUM("admin", "support", "user"),
+      defaultValue: "user",
     },
   },
   {
     sequelize,
-    modelName: "CommunityMessage",
-    tableName: "community_messages",
+    modelName: "CommunityMember",
+    tableName: "community_members",
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
-    indexes: [
-      { fields: ["community_id", "created_at"] },
-      { fields: ["user_id"] },
-    ],
+    indexes: [{ unique: true, fields: ["community_id", "user_id"] }],
   }
 );
 
-export default CommunityMessage;
+export default CommunityMember;
