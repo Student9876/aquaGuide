@@ -97,6 +97,10 @@ const ManageTextGuides = ({ placeholder }) => {
   });
 
   const handleCreate = () => {
+    if (!title.trim() || !content.trim()) {
+      toast.error("Please give content or title");
+      return;
+    }
     createTextGuideMutation.mutate({
       title: title,
       content: textGuide,
@@ -195,6 +199,7 @@ const ManageTextGuides = ({ placeholder }) => {
               placeholder="Enter guide title..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              required
             />
           </div>
           <div className="space-y-2">

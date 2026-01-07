@@ -1,10 +1,16 @@
 import express from "express";
 import {
-    getAllMessages,
-    getRecentMessages,
-    getUserMessages,
+  getAllMessages,
+  getRecentMessages,
+  getUserMessages,
+  getChatStatistics,
+  createCommunity,
 } from "../controllers/community_chat.controller.js";
-import { protectRoute } from "../middleware/auth.middleware.js";
+import {
+  adminRoute,
+  protectRoute,
+  supportOrAdminRoute,
+} from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
@@ -19,7 +25,7 @@ router.get("/recent", getRecentMessages);
 
 // Protected routes
 router.get("/", protectRoute, getAllMessages);
+router.post("/createcommunity", supportOrAdminRoute, createCommunity);
 router.get("/:userId", protectRoute, getUserMessages);
 
 export default router;
-

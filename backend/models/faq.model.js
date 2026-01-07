@@ -16,19 +16,19 @@ FAQ.init(
       unique: true,
     },
     answers: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: false,
       unique: false,
     },
     created_by: {
-        type: DataTypes.UUID,
-        references: {
-            model: "Users",
-            key: "id"
-        },
-        allowNull: false,
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE"
+      type: DataTypes.UUID,
+      references: {
+        model: "Users",
+        key: "id",
+      },
+      allowNull: false,
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
   },
   {
