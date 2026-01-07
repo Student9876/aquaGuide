@@ -22,7 +22,6 @@ const router = express.Router();
 
 // Public routes
 router.get("/recent", getRecentMessages);
-router.get("/stats", getChatStatistics);
 
 // Protected routes
 router.get("/", protectRoute, getAllMessages);

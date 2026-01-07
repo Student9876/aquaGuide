@@ -11,6 +11,7 @@ import {
   suggestUserIds,
   getUserRole,
   getUserLocation,
+  searchUser,
 } from "../controllers/auth.controller.js";
 import { protectRoute, adminRoute,optionalProtectRoute } from "../middleware/auth.middleware.js";
 import { heartbeat } from "../controllers/heartbeat.controller.js";
@@ -57,5 +58,7 @@ router.post("/heartbeat",optionalProtectRoute,heartbeat );
 
 // Create Guest user
 router.post("/guestCreate", createGuest);
+
+router.get("/search", searchUser);
 
 export default router;

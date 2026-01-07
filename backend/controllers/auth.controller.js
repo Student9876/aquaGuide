@@ -519,3 +519,48 @@ export const getUserLocation = async (req, res) => {
     res.status(500).json({ error: "Failed to get location" });
   }
 };
+
+
+export const searchUser = async (req, res) => {
+  try {
+    const { query, filter = {}, page = 1, pageSize = 10 } = req.body;
+
+    const where = {};
+
+    if (query && query.trim()) {
+      where[Op.or] = [
+        { userid: { [Op.iLike]: `%${query}%` } },
+        { name: { [Op.iLike]: `%${query}%` } },
+        { email: { [Op.iLike]: `%${query}%` } },
+      ];
+    }
+
+    if (filter.role) where.role = filter.role;
+    if (filter.status) where.status = filter.status;
+    if (filter.gender) where.gender = filter.gender;
+    if (filter.country_code) where.country_code = filter.country_code;
+    if (filter.region) where.region = filter.region;
+
+    const offset = (page - 1) * pageSize;
+    const limit = pageSize;
+
+    const { rows: users, count: total } = await User.findAndCountAll({
+      where,
+      attributes: { exclude: ["password"] },
+      order: [["createdAt", "DESC"]],
+      limit,
+      offset,
+    });
+
+    res.status(200).json({
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+      users,
+    });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};

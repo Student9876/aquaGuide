@@ -24,8 +24,15 @@ const ViewForum = () => {
   const { id } = useParams<{ id: string }>();
 
   const isAuthenticated = !!localStorage.getItem("accessToken");
+<<<<<<< HEAD
+  const navigate = useNavigate();
+
+  console.log(isAuthenticated)
+  
+=======
   console.log(isAuthenticated);
 
+>>>>>>> 3d8322efe6eb6a5e0b282417fdb22f51c0d77967
   const redirectToLogin = () => {
     navigate("/login", {
       state: { from: location.pathname },
@@ -50,17 +57,14 @@ const ViewForum = () => {
     isError: isForumListError,
   } = useCommunityForumPublicInfinite();
 
-  const navigate = useNavigate();
 
   const queryClient = useQueryClient();
 
   const voteMutation = useMutation({
     mutationFn: (type: "up" | "down") => {
-      if (type === "up") {
-        return community_forum_api.likeCommunity({ forum_id: id! });
-      } else {
-        return community_forum_api.dislikeCommunity({ forum_id: id! });
-      }
+      return type === "up"
+        ? community_forum_api.likeCommunity({ forum_id: id! })
+        : community_forum_api.dislikeCommunity({ forum_id: id! });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -90,7 +94,7 @@ const ViewForum = () => {
     return <CircularLoader />;
   }
 
-  if (isErrorPost) {
+    if (isErrorPost) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
         <h1 className="text-2xl font-bold mb-4 text-red-600">
@@ -187,10 +191,14 @@ const ViewForum = () => {
                   onClick={() => handlevote("down")}
                   className="gap-2"
                 >
+<<<<<<< HEAD
+                  <ThumbsDown className="h-4 w-4" />
+=======
                   <ThumbsDown
                     className="h-4 w-4"
                     onClick={() => handlevote("down")}
                   />
+>>>>>>> 3d8322efe6eb6a5e0b282417fdb22f51c0d77967
                   <span>{forumPost.dislike.length}</span>
                 </Button>
               </div>
