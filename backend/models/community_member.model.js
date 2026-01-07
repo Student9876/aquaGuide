@@ -1,7 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import sequelize from "../lib/db.js";
 import User from "./user.model.js";
-import Community from "./community.model.js";
+import Community from "./community_chat.model.js";
 
 class CommunityMember extends Model {}
 

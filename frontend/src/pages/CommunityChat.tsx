@@ -5,6 +5,17 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Search, Users, Send, Menu, MessageCircle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+import { Label } from "recharts";
+import { Textarea } from "@/components/ui/textarea";
 
 const communities = [
   {
@@ -127,6 +138,7 @@ const SidebarContent = ({
   filteredCommunities,
   filteredUsers,
   onSelectChat,
+  onCreateCommunity,
 }: {
   selectedChat: { id: number; name: string; type: "user" | "community" } | null;
   setSelectedChat: (
@@ -139,6 +151,7 @@ const SidebarContent = ({
   filteredCommunities: typeof communities;
   filteredUsers: typeof recentChats;
   onSelectChat?: () => void;
+  onCreateCommunity: () => void;
 }) => (
   <div className="flex flex-col h-full overflow-hidden">
     <Tabs
@@ -164,7 +177,11 @@ const SidebarContent = ({
         className=" flex flex-col m-0 min-h-0 overflow-hidden "
       >
         <div className="p-4 border-b">
-          <Button variant="ocean" className="w-full">
+          <Button
+            variant="ocean"
+            className="w-full"
+            onClick={onCreateCommunity}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Create Community
           </Button>
@@ -308,6 +325,9 @@ const CommunityChat = () => {
   const [userSearch, setUserSearch] = useState("");
   const [message, setMessage] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [newCommunityName, setNewCommunityName] = useState("");
+  const [newCommunityDescription, setNewCommunityDescription] = useState("");
 
   const filteredCommunities = communities.filter((c) =>
     c.name.toLowerCase().includes(communitySearch.toLowerCase())
@@ -326,138 +346,196 @@ const CommunityChat = () => {
     setUserSearch,
     filteredCommunities,
     filteredUsers,
+    onCreateCommunity: () => setCreateModalOpen(true),
+  };
+
+  const handleCreateCommunity = () => {
+    // TODO: Implement actual community creation
+    console.log("Creating community:", {
+      name: newCommunityName,
+      description: newCommunityDescription,
+    });
+    setNewCommunityName("");
+    setNewCommunityDescription("");
+    setCreateModalOpen(false);
   };
 
   return (
-    <div className="flex h-[calc(100vh-130px)] min-h-[500px] border rounded-lg overflow-hidden bg-card">
-      {/* Desktop Sidebar */}
-      <div className="hidden md:flex w-80 border-r flex-col bg-muted/30">
-        <SidebarContent {...sidebarProps} />
-      </div>
-
-      {/* Chat Body */}
-      <div className="flex-1 flex flex-col">
-        {selectedChat ? (
-          <>
-            {/* Chat Header */}
-            <div className="p-4 border-b flex items-center gap-3">
-              {/* Mobile Menu Button */}
-              <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="md:hidden">
-                    <Menu className="h-5 w-5" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-80 p-0">
-                  <SidebarContent
-                    {...sidebarProps}
-                    onSelectChat={() => setSheetOpen(false)}
-                  />
-                </SheetContent>
-              </Sheet>
-
-              <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
-                {selectedChat.type === "community" ? (
-                  <Users className="h-5 w-5 text-primary" />
-                ) : (
-                  <span className="font-medium">
-                    {selectedChat.name.charAt(0)}
-                  </span>
-                )}
-              </div>
-              <div>
-                <h3 className="font-semibold">{selectedChat.name}</h3>
-                <p className="text-xs text-muted-foreground">
-                  {selectedChat.type === "community"
-                    ? "Community chat"
-                    : "Online"}
-                </p>
-              </div>
+    <>
+      <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Create Community</DialogTitle>
+            <DialogDescription>
+              Create a new community to connect with fellow aquarium
+              enthusiasts.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Community Name</Label>
+              <Input
+                id="name"
+                placeholder="Enter community name..."
+                value={newCommunityName}
+                onChange={(e) => setNewCommunityName(e.target.value)}
+              />
             </div>
-
-            {/* Messages */}
-            <ScrollArea className="flex-1 p-4">
-              <div className="space-y-4">
-                {mockMessages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${
-                      msg.isMe ? "justify-end" : "justify-start"
-                    }`}
-                  >
-                    <div
-                      className={`max-w-[70%] rounded-lg p-3 ${
-                        msg.isMe
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
-                      }`}
-                    >
-                      {!msg.isMe && (
-                        <p className="text-xs font-medium mb-1 text-primary">
-                          {msg.sender}
-                        </p>
-                      )}
-                      <p className="text-sm">{msg.content}</p>
-                      <p
-                        className={`text-xs mt-1 ${
-                          msg.isMe
-                            ? "text-primary-foreground/70"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        {msg.time}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-
-            {/* Message Input */}
-            <div className="p-4 border-t">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Type a message..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="flex-1"
-                  onKeyPress={(e) => e.key === "Enter" && setMessage("")}
-                />
-                <Button
-                  variant="ocean"
-                  size="icon"
-                  onClick={() => setMessage("")}
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              {/* Mobile Menu Button when no chat selected */}
-              <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="outline" className="md:hidden mb-4">
-                    <Menu className="mr-2 h-4 w-4" />
-                    Open Chats
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-80 p-0">
-                  <SidebarContent
-                    {...sidebarProps}
-                    onSelectChat={() => setSheetOpen(false)}
-                  />
-                </SheetContent>
-              </Sheet>
-              <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Select a chat to start messaging</p>
+            <div className="grid gap-2">
+              <Label>Description</Label>
+              <Textarea
+                id="description"
+                placeholder="Describe your community..."
+                value={newCommunityDescription}
+                onChange={(e) => setNewCommunityDescription(e.target.value)}
+                className="min-h-[100px]"
+              />
             </div>
           </div>
-        )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="ocean"
+              onClick={handleCreateCommunity}
+              disabled={!newCommunityName.trim()}
+            >
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <div className="flex h-[calc(100vh-130px)] min-h-[500px] border rounded-lg overflow-hidden bg-card">
+        {/* Desktop Sidebar */}
+        <div className="hidden md:flex w-80 border-r flex-col bg-muted/30">
+          <SidebarContent {...sidebarProps} />
+        </div>
+
+        {/* Chat Body */}
+        <div className="flex-1 flex flex-col">
+          {selectedChat ? (
+            <>
+              {/* Chat Header */}
+              <div className="p-4 border-b flex items-center gap-3">
+                {/* Mobile Menu Button */}
+                <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" className="md:hidden">
+                      <Menu className="h-5 w-5" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="w-80 p-0">
+                    <SidebarContent
+                      {...sidebarProps}
+                      onSelectChat={() => setSheetOpen(false)}
+                    />
+                  </SheetContent>
+                </Sheet>
+
+                <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  {selectedChat.type === "community" ? (
+                    <Users className="h-5 w-5 text-primary" />
+                  ) : (
+                    <span className="font-medium">
+                      {selectedChat.name.charAt(0)}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-semibold">{selectedChat.name}</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedChat.type === "community"
+                      ? "Community chat"
+                      : "Online"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <ScrollArea className="flex-1 p-4">
+                <div className="space-y-4">
+                  {mockMessages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${
+                        msg.isMe ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={`max-w-[70%] rounded-lg p-3 ${
+                          msg.isMe
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted"
+                        }`}
+                      >
+                        {!msg.isMe && (
+                          <p className="text-xs font-medium mb-1 text-primary">
+                            {msg.sender}
+                          </p>
+                        )}
+                        <p className="text-sm">{msg.content}</p>
+                        <p
+                          className={`text-xs mt-1 ${
+                            msg.isMe
+                              ? "text-primary-foreground/70"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          {msg.time}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+
+              {/* Message Input */}
+              <div className="p-4 border-t">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Type a message..."
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    className="flex-1"
+                    onKeyPress={(e) => e.key === "Enter" && setMessage("")}
+                  />
+                  <Button
+                    variant="ocean"
+                    size="icon"
+                    onClick={() => setMessage("")}
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-muted-foreground">
+              <div className="text-center">
+                {/* Mobile Menu Button when no chat selected */}
+                <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" className="md:hidden mb-4">
+                      <Menu className="mr-2 h-4 w-4" />
+                      Open Chats
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="w-80 p-0">
+                    <SidebarContent
+                      {...sidebarProps}
+                      onSelectChat={() => setSheetOpen(false)}
+                    />
+                  </SheetContent>
+                </Sheet>
+                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Select a chat to start messaging</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
