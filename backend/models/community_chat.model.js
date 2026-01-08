@@ -22,6 +22,11 @@ Community.init(
       allowNull: true,
     },
 
+    is_private: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false
+    },
+
     created_by: {
       type: DataTypes.UUID,
       allowNull: false,
