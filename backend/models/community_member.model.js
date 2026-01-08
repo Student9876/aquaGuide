@@ -30,11 +30,6 @@ CommunityMember.init(
         key: "id",
       },
     },
-
-    role: {
-      type: DataTypes.ENUM("admin", "support", "user"),
-      defaultValue: "user",
-    },
   },
   {
     sequelize,
