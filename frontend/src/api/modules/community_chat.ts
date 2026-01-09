@@ -1,4 +1,5 @@
 import {
+  AllCommunityResponse,
   communityChatPayload,
   communityChatResponse,
   JoinedCommunityResponse,
@@ -22,4 +23,9 @@ export const communityChatApi = {
         headers: { useAuth: true },
       }
     ),
+
+  getAllPublicCommunity: async () =>
+    httpClient.get<AllCommunityResponse>("/api/community/chat/public", {
+      headers: { useAuth: true },
+    }),
 };

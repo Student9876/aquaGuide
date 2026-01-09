@@ -457,6 +457,15 @@ export interface CommunityChat {
   description?: string;
 }
 
+export interface CommunitySection {
+  id: string;
+  name: string;
+  description: string;
+  is_private: boolean;
+  created_at: Date;
+  updated_at: Date;
+}
+
 export interface CommunityMember {
   id: string;
   community_id: string;
@@ -469,5 +478,11 @@ export interface CommunityMember {
 export interface JoinedCommunityResponse {
   success: boolean;
   data: CommunityMember[];
+  count: number;
+}
+
+export interface AllCommunityResponse {
+  success: boolean;
+  data: CommunitySection[];
   count: number;
 }
