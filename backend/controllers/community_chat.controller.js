@@ -3,6 +3,7 @@ import User from "../models/user.model.js";
 import sequelize from "../lib/db.js";
 import { Op, where, fn, col } from "sequelize";
 import CommunityMember from "../models/community_member.model.js";
+import Community from "../models/community_chat.model.js";
 
 export const createRoom = async (req, res) => {
   try {
@@ -163,12 +164,45 @@ export const getChatStatistics = async (req, res) => {
   }
 };
 
-export const getPublicCommunity = async (req, res) => {
-  try {
-  } catch (error) {
-    console.error("Error fetching community:", error);
-    res.status(500).json({ error: "Failed to fetch community " });
+export const joinCommunity = async (req, res) => {
+  const communityId = req.params.id;
+  const userId = req.user.id;
+
+  const exists = await CommunityMember.findOne({
+    where: { community_id: communityId, user_id: userId },
+  });
+
+  if (exists) {
+    return res.status(400).json({
+      success: false,
+      error: "Already a member",
+    });
   }
+
+  await CommunityMember.create({
+    community_id: communityId,
+    user_id: userId,
+    role: "member",
+  });
+
+  res.json({ success: true });
+};
+
+export const getPublicCommunities = async (req, res) => {
+  const communities = await Community.findAll({
+    where: { is_public: true },
+    attributes: ["id", "name", "description", "created_at"],
+    include: [
+      {
+        model: User,
+        as: "creator",
+        attributes: ["id", "userid", "name"],
+      },
+    ],
+    order: [["created_at", "DESC"]],
+  });
+
+  res.json({ success: true, data: communities });
 };
 
 export const joinedCommunity = async (req, res) => {
