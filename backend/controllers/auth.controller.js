@@ -112,7 +112,7 @@ export const login = async (req, res) => {
         .json({ message: "Identifier and password required" });
     }
 
-    // Find user either by email OR userid
+    /* ---------------- FIND USER ---------------- */
     const user = await User.findOne({
       where: {
         [Op.or]: [{ email: loginId }, { userid: loginId }],
@@ -120,35 +120,32 @@ export const login = async (req, res) => {
     });
 
     if (!user) {
-      console.log("❌ No user found with email:", email);
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    // 💥 ADDED: Step 2: Check Account Status
+    /* ---------------- ACCOUNT STATUS CHECK ---------------- */
     if (user.status !== "active") {
       const message =
         user.status === "locked"
           ? "Account is locked due to too many failed attempts."
           : "Account is currently inactive.";
 
-      return res.status(403).json({ message }); // 403 Forbidden is appropriate here
+      return res.status(403).json({ message });
     }
 
-    // Step 3: Compare password
+    /* ---------------- PASSWORD CHECK ---------------- */
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
-      // 💥 ADDED: Increment failed attempts on incorrect password
       user.failed_login_attempts += 1;
 
-      // 💥 ADDED: Check if account should be locked
       if (user.failed_login_attempts >= 5) {
         user.status = "locked";
       }
 
-      await user.save(); // Save the updated attempts and potentially the new status
+      await user.save();
 
-      const remainingAttempts = 5 - user.failed_login_attempts;
+      const remainingAttempts = Math.max(0, 5 - user.failed_login_attempts);
 
       if (user.status === "locked") {
         return res.status(403).json({
@@ -161,18 +158,45 @@ export const login = async (req, res) => {
       });
     }
 
-    // 💥 ADDED: Step 4: Reset failed attempts on successful login
+    /* ---------------- RESET FAILED ATTEMPTS ---------------- */
     if (user.failed_login_attempts > 0) {
       user.failed_login_attempts = 0;
       await user.save();
     }
 
-    // Step 5: generate JWT (using the existing generateTokens/setCookies pattern for consistency)
+    /* ---------------- IP + LOCATION (LOGIN) ---------------- */
+    const ipAddress = getClientIp(req);
+    const location = getGeoFromRequest(req);
+
+    // Check for guest with same IP
+    const guest = await Guest.findOne({
+      where: { ip_address: ipAddress },
+    });
+
+    // Update user with latest IP + location
+    await User.update(
+      {
+        ip_address: ipAddress,
+        country_code: location?.country_code ?? null,
+        region: location?.region ?? null,
+        latitude: location?.latitude ?? null,
+        longitude: location?.longitude ?? null,
+        last_seen: new Date(),
+      },
+      { where: { id: user.id } }
+    );
+
+    // 🧹 Remove guest after successful login
+    if (guest) {
+      await guest.destroy();
+    }
+
+    /* ---------------- TOKENS ---------------- */
     const { accessToken, refreshToken } = generateTokens(user.id);
     setCookies(res, accessToken, refreshToken);
 
-    // Step 6: respond with user data
-    res.status(200).json({
+    /* ---------------- RESPONSE ---------------- */
+    return res.status(200).json({
       message: "Login successful",
       user: {
         id: user.id,
@@ -181,16 +205,20 @@ export const login = async (req, res) => {
         email: user.email,
         role: user.role,
         status: user.status,
-        accessToken: accessToken,
-        refreshToken: refreshToken,
+        accessToken,
+        refreshToken,
         tokenExpiry: Date.now() + 24 * 60 * 60 * 1000,
       },
     });
   } catch (error) {
     console.error("💥 Login error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
+
 
 // --------------------
 // LOGOUT
