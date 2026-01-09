@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -16,6 +16,10 @@ import {
 
 import { Label } from "recharts";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import { communityChatApi } from "@/api/modules/community_chat";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Description } from "@radix-ui/react-toast";
 
 const communities = [
   {
@@ -328,6 +332,7 @@ const CommunityChat = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [newCommunityName, setNewCommunityName] = useState("");
   const [newCommunityDescription, setNewCommunityDescription] = useState("");
+  const [isPrivate, setIsPrivate] = useState<boolean>(false);
 
   const filteredCommunities = communities.filter((c) =>
     c.name.toLowerCase().includes(communitySearch.toLowerCase())
@@ -349,15 +354,26 @@ const CommunityChat = () => {
     onCreateCommunity: () => setCreateModalOpen(true),
   };
 
+  useEffect(() => {}, []);
+
   const handleCreateCommunity = () => {
     // TODO: Implement actual community creation
-    console.log("Creating community:", {
-      name: newCommunityName,
-      description: newCommunityDescription,
-    });
-    setNewCommunityName("");
-    setNewCommunityDescription("");
-    setCreateModalOpen(false);
+    if (!newCommunityDescription.trim() || !newCommunityName.trim()) {
+      toast.error("Please give description and title");
+    }
+    try {
+      const res = communityChatApi.create({
+        name: newCommunityName,
+        description: newCommunityDescription,
+        is_private: isPrivate,
+      });
+      toast.success("Community created successfully");
+      setNewCommunityName("");
+      setNewCommunityDescription("");
+      setCreateModalOpen(false);
+    } catch (error) {
+      toast.error("Something went wrong creating the community");
+    }
   };
 
   return (
@@ -390,6 +406,17 @@ const CommunityChat = () => {
                 onChange={(e) => setNewCommunityDescription(e.target.value)}
                 className="min-h-[100px]"
               />
+            </div>
+
+            <div className="flex gap-2 items-center pt-2">
+              <Checkbox
+                checked={isPrivate}
+                onCheckedChange={(checked) => {
+                  setIsPrivate(checked === true);
+                }}
+              />
+
+              <span className="text-sm">Private Community ?</span>
             </div>
           </div>
           <DialogFooter>

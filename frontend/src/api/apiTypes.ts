@@ -440,3 +440,13 @@ export interface FaqResponse {
   questions: QuestionItem[];
   pagination: paginate;
 }
+
+export interface communityChatPayload {
+  name: string;
+  description: string;
+  is_private: boolean;
+}
+
+export interface communityChatResponse {
+  message: string;
+}

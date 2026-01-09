@@ -5,6 +5,7 @@ import {
   getUserMessages,
   getChatStatistics,
   createCommunity,
+  joinedCommunity,
 } from "../controllers/community_chat.controller.js";
 import {
   adminRoute,
@@ -25,7 +26,8 @@ router.get("/recent", getRecentMessages);
 
 // Protected routes
 router.get("/", protectRoute, getAllMessages);
-router.post("/createcommunity", supportOrAdminRoute, createCommunity);
+router.post("/createcommunity", protectRoute, adminRoute, createCommunity);
+router.get("/getJoinedCommunity", protectRoute, joinedCommunity);
 router.get("/:userId", protectRoute, getUserMessages);
 
 export default router;

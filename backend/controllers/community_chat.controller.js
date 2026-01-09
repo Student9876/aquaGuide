@@ -163,10 +163,43 @@ export const getChatStatistics = async (req, res) => {
   }
 };
 
+export const getPublicCommunity = async (req, res) => {
+  try {
+  } catch (error) {
+    console.error("Error fetching community:", error);
+    res.status(500).json({ error: "Failed to fetch community " });
+  }
+};
+
+export const joinedCommunity = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { count, rows } = await CommunityMember.findAndCountAll({
+      where: { user_id: userId },
+      include: [
+        {
+          model: CommunityChat,
+          attributes: ["id", "name"],
+        },
+      ],
+      order: [["created_at", "ASC"]],
+    });
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      count: count,
+    });
+  } catch (error) {
+    console.error("Error fetching joined community:", error);
+    res.status(500).json({ error: "Failed to fetch joined community " });
+  }
+};
+
 export const createCommunity = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, description } = req.body;
+    const { name, description, is_private } = req.body;
 
     // Duplicate check (case-insensitive)
     const existing = await CommunityChat.findOne({
@@ -188,16 +221,15 @@ export const createCommunity = async (req, res) => {
     const newCommunity = await CommunityChat.create({
       name: name,
       description: description,
+      is_private: is_private,
       created_by: userId,
     });
     const addmember = await CommunityMember.create({
       community_id: newCommunity.id,
-      user_id: userId
-    })
+      user_id: userId,
+    });
     return res.status(200).json({
       message: "Community created",
-      members: addmember,
-      data: newCommunity
     });
   } catch (error) {
     console.error("Error creating community:", error);
@@ -205,55 +237,58 @@ export const createCommunity = async (req, res) => {
   }
 };
 
-
 export const searchCommunuty = async (req, res) => {
   try {
-    const {query, page=1, pageSize=20} = req.body
-  
+    const { query, page = 1, pageSize = 20 } = req.body;
+
     const where = {};
-  
-      if (query && query.trim()) {
-        where[Op.or] = [
-          { description: { [Op.iLike]: `%${query}%` } },
-          { name: { [Op.iLike]: `%${query}%` } },
-        ];
-      }
-      const limit = pageSize
-      const offset = (page-1)*pageSize
-       const { rows: users, count: total } = await User.findAndCountAll({
-        where,
-        attributes: { exclude: ["password"] },
-        order: [["createdAt", "DESC"]],
-        limit,
-        offset,
-      });
-      res.status(200).json({
-        total,
-        page,
-        pageSize,
-        totalPages: Math.ceil(total / pageSize),
-        users,
-      });
+
+    if (query && query.trim()) {
+      where[Op.or] = [
+        { description: { [Op.iLike]: `%${query}%` } },
+        { name: { [Op.iLike]: `%${query}%` } },
+      ];
+    }
+    const limit = pageSize;
+    const offset = (page - 1) * pageSize;
+    const { rows: users, count: total } = await User.findAndCountAll({
+      where,
+      attributes: { exclude: ["password"] },
+      order: [["createdAt", "DESC"]],
+      limit,
+      offset,
+    });
+    res.status(200).json({
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+      users,
+    });
   } catch (error) {
-    console.error(error.message)
+    console.error(error.message);
     res.status(500).json({
-      "message":"Server error occured in search community"
-    })
+      message: "Server error occured in search community",
+    });
   }
-}
+};
 
 export const removeMember = async (req, res) => {
   try {
     const { community_id, user_id } = req.body;
     if (!community_id || !user_id) {
-      return res.status(400).json({ error: "community_id and user_id are required" });
+      return res
+        .status(400)
+        .json({ error: "community_id and user_id are required" });
     }
     const member = await CommunityMember.findOne({
       where: { community_id, user_id },
     });
 
     if (!member) {
-      return res.status(404).json({ error: "Member not found in this community" });
+      return res
+        .status(404)
+        .json({ error: "Member not found in this community" });
     }
 
     await member.destroy();
@@ -266,24 +301,25 @@ export const removeMember = async (req, res) => {
     console.error(error.message);
     res.status(500).json({ error: "Failed to remove member from community" });
   }
-}
+};
 
-export const getCommunityChatInfo = async(req, res)=>{
-  const {communityId} = req.body
-  if(!communityId)
-    res.status(400).json({"message":"Community Id is required"})
+export const getCommunityChatInfo = async (req, res) => {
+  const { communityId } = req.body;
+  if (!communityId)
+    res.status(400).json({ message: "Community Id is required" });
   const community = await CommunityChat.findOne({
-    where: {community_id: communityId}
-  })
-  if(!community){
-    res.json(404).json({"message":"community not Found"})
+    where: { community_id: communityId },
+  });
+  if (!community) {
+    res.json(404).json({ message: "community not Found" });
   }
   const communityMembers = await CommunityMember.findAll({
-    where: {community_id: communityId}
-  })
-  return res.status(200).json({"message":"Community Id info found succesfully",
-    "community_chat_info": community,
-    "community_chat_members": communityMembers,
-    "total_members": communityMembers.length
-  })
-}
+    where: { community_id: communityId },
+  });
+  return res.status(200).json({
+    message: "Community Id info found succesfully",
+    community_chat_info: community,
+    community_chat_members: communityMembers,
+    total_members: communityMembers.length,
+  });
+};
