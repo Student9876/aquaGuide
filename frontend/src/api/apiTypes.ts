@@ -454,6 +454,7 @@ export interface communityChatResponse {
 export interface CommunityChat {
   id: string;
   name: string;
+  description?: string;
 }
 
 export interface CommunityMember {
@@ -462,7 +463,7 @@ export interface CommunityMember {
   user_id: string;
   created_at: string; // ISO date string
   updated_at: string; // ISO date string
-  communityChat: CommunityChat;
+  community: CommunityChat;
 }
 
 export interface JoinedCommunityResponse {

@@ -180,7 +180,7 @@ export const joinedCommunity = async (req, res) => {
         {
           model: CommunityChat,
           as: "community",
-          attributes: ["id", "name"],
+          attributes: ["id", "name", "description"],
         },
       ],
       order: [["created_at", "ASC"]],

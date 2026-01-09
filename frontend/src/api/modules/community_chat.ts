@@ -15,7 +15,7 @@ export const communityChatApi = {
       }
     ),
 
-  getJoinedCommunity: () =>
+  getJoinedCommunity: async () =>
     httpClient.get<JoinedCommunityResponse>(
       "/api/community/chat/getJoinedCommunity",
       {

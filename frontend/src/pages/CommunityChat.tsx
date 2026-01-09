@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { communityChatApi } from "@/api/modules/community_chat";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Description } from "@radix-ui/react-toast";
+import { CommunityMember } from "@/api/apiTypes";
 
 const communities = [
   {
@@ -44,7 +45,7 @@ const communities = [
 
 const recentChats = [
   {
-    id: 1,
+    id: "1",
     name: "John Aquarist",
     lastMessage: "Thanks for the help!",
     time: "5 min",
@@ -52,7 +53,7 @@ const recentChats = [
     online: true,
   },
   {
-    id: 2,
+    id: "2",
     name: "Sarah Fish Lover",
     lastMessage: "Check out my new setup!",
     time: "1 hr",
@@ -60,7 +61,7 @@ const recentChats = [
     online: true,
   },
   {
-    id: 3,
+    id: "3",
     name: "Mike Tank Master",
     lastMessage: "Let's discuss water params",
     time: "2 hr",
@@ -68,7 +69,7 @@ const recentChats = [
     online: false,
   },
   {
-    id: 4,
+    id: "4",
     name: "Emma Aquascaper",
     lastMessage: "Beautiful tank!",
     time: "1 day",
@@ -76,7 +77,7 @@ const recentChats = [
     online: false,
   },
   {
-    id: 5,
+    id: "5",
     name: "Alex Reef Keeper",
     lastMessage: "Coral looks great!",
     time: "2 days",
@@ -84,7 +85,7 @@ const recentChats = [
     online: true,
   },
   {
-    id: 6,
+    id: "6",
     name: "Chris Betta Fan",
     lastMessage: "Nice betta!",
     time: "3 days",
@@ -143,10 +144,11 @@ const SidebarContent = ({
   filteredUsers,
   onSelectChat,
   onCreateCommunity,
+  joinedCom,
 }: {
-  selectedChat: { id: number; name: string; type: "user" | "community" } | null;
+  selectedChat: { id: string; name: string; type: "user" | "community" } | null;
   setSelectedChat: (
-    chat: { id: number; name: string; type: "user" | "community" } | null
+    chat: { id: string; name: string; type: "user" | "community" } | null
   ) => void;
   communitySearch: string;
   setCommunitySearch: (value: string) => void;
@@ -156,6 +158,7 @@ const SidebarContent = ({
   filteredUsers: typeof recentChats;
   onSelectChat?: () => void;
   onCreateCommunity: () => void;
+  joinedCom: CommunityMember[];
 }) => (
   <div className="flex flex-col h-full overflow-hidden">
     <Tabs
@@ -204,13 +207,13 @@ const SidebarContent = ({
 
           <ScrollArea className="flex-1 mt-3 ">
             <div className="space-y-1 pr-2 ">
-              {filteredCommunities.map((community) => (
+              {joinedCom.map((community) => (
                 <div
-                  key={community.id}
+                  key={community.community_id}
                   onClick={() => {
                     setSelectedChat({
-                      id: community.id,
-                      name: community.name,
+                      id: community.community_id,
+                      name: community.community.name,
                       type: "community",
                     });
                     onSelectChat?.();
@@ -225,14 +228,15 @@ const SidebarContent = ({
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-primary" />
                     <span className="font-medium text-sm truncate">
-                      {community.name}
+                      {community?.community?.name || "N/A"}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground truncate ml-6">
-                    {community.lastMessage}
+                    {community?.community?.description ||
+                      `Welcome to ${community?.community?.name} `}
                   </p>
                   <p className="text-xs text-primary/70 ml-6">
-                    {community.online} online
+                    {/* {community.online} online */}
                   </p>
                 </div>
               ))}
@@ -321,10 +325,10 @@ const SidebarContent = ({
 
 const CommunityChat = () => {
   const [selectedChat, setSelectedChat] = useState<{
-    id: number;
+    id: string;
     name: string;
     type: "user" | "community";
-  } | null>({ id: 1, name: "John Aquarist", type: "user" });
+  } | null>({ id: "1", name: "John Aquarist", type: "user" });
   const [communitySearch, setCommunitySearch] = useState("");
   const [userSearch, setUserSearch] = useState("");
   const [message, setMessage] = useState("");
@@ -333,6 +337,7 @@ const CommunityChat = () => {
   const [newCommunityName, setNewCommunityName] = useState("");
   const [newCommunityDescription, setNewCommunityDescription] = useState("");
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
+  const [joinedCom, setJoinedCom] = useState<CommunityMember[]>([]);
 
   const filteredCommunities = communities.filter((c) =>
     c.name.toLowerCase().includes(communitySearch.toLowerCase())
@@ -341,6 +346,17 @@ const CommunityChat = () => {
   const filteredUsers = recentChats.filter((u) =>
     u.name.toLowerCase().includes(userSearch.toLowerCase())
   );
+
+  useEffect(() => {
+    const getJoinCommunity = async () => {
+      try {
+        const res = await communityChatApi.getJoinedCommunity();
+        setJoinedCom(res?.data?.data || []);
+        console.log(res?.data?.data);
+      } catch (error) {}
+    };
+    getJoinCommunity();
+  }, []);
 
   const sidebarProps = {
     selectedChat,
@@ -352,16 +368,8 @@ const CommunityChat = () => {
     filteredCommunities,
     filteredUsers,
     onCreateCommunity: () => setCreateModalOpen(true),
+    joinedCom,
   };
-
-  useEffect(() => {
-    const getJoinedCommunity = async () => {
-      try {
-        const res = communityChatApi.getJoinedCommunity();
-      } catch (error) {}
-    };
-    getJoinedCommunity();
-  }, []);
 
   const handleCreateCommunity = () => {
     // TODO: Implement actual community creation
