@@ -28,16 +28,38 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { authApi } from "@/api/modules/auth";
 import { toast } from "sonner";
 import CircularLoader from "../ui/CircularLoader";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const ManageUsers = () => {
   const userid = localStorage.getItem("userid");
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
+  const [role, setRole] = useState("");
+  const [status, setStatus] = useState("");
+  const [gender, setGender] = useState("");
+  const [countryCode, setCountryCode] = useState("");
+  const [region, setRegion] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+
   const [page, setPage] = useState(1);
 
   // const [users] = useState(mockUsers);
   const queryClient = useQueryClient();
-  const { data, isLoading, isError } = useUsers(page);
+  // Prepare filters object
+  const filters: any = {};
+  if (role) filters.role = role;
+  if (status) filters.status = status;
+  if (gender) filters.gender = gender;
+  if (countryCode) filters.country_code = countryCode;
+  if (region) filters.region = region;
+
+  const { data, isLoading, isError } = useUsers(page, debouncedSearchQuery, filters);
+
   const userArray: User[] = data?.users || [];
   const totalPages: number = data?.pagination?.totalPages || 1;
+
 
   const deactivateUserMutation = useMutation({
     mutationFn: authApi.deactivateUser,
@@ -302,6 +324,86 @@ const ManageUsers = () => {
         <p className="text-muted-foreground mt-1">
           View and manage user accounts.
         </p>
+        <div className="mt-4 max-w-2xl flex flex-col gap-2">
+          <div className="flex gap-2 items-center">
+            <input
+              type="text"
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-primary"
+              placeholder="Search by username, email, or name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <Button
+              type="button"
+              variant={showFilters ? "secondary" : "outline"}
+              className="h-10 px-4"
+              onClick={() => setShowFilters((prev) => !prev)}
+            >
+              Filters
+            </Button>
+          </div>
+          {showFilters && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              <select
+                className="border rounded-md px-2 py-1"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+              >
+                <option value="">Role</option>
+                <option value="admin">Admin</option>
+                <option value="support">Support</option>
+                <option value="user">User</option>
+              </select>
+              <select
+                className="border rounded-md px-2 py-1"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                <option value="">Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+              <select
+                className="border rounded-md px-2 py-1"
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+              >
+                <option value="">Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+              <input
+                type="text"
+                className="border rounded-md px-2 py-1"
+                placeholder="Country Code"
+                value={countryCode}
+                onChange={(e) => setCountryCode(e.target.value)}
+              />
+              <input
+                type="text"
+                className="border rounded-md px-2 py-1"
+                placeholder="Region"
+                value={region}
+                onChange={(e) => setRegion(e.target.value)}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 px-4"
+                onClick={() => {
+                  setRole("");
+                  setStatus("");
+                  setGender("");
+                  setCountryCode("");
+                  setRegion("");
+                }}
+              >
+                Clear Filters
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Desktop Table View */}
