@@ -1,4 +1,8 @@
-import { communityChatPayload, communityChatResponse } from "../apiTypes";
+import {
+  communityChatPayload,
+  communityChatResponse,
+  JoinedCommunityResponse,
+} from "../apiTypes";
 import httpClient from "../axiosSetup";
 
 export const communityChatApi = {
@@ -12,7 +16,10 @@ export const communityChatApi = {
     ),
 
   getJoinedCommunity: () =>
-    httpClient.get<any>("/api/community/chat/getJoinedCommunity", {
-      headers: { useAuth: true },
-    }),
+    httpClient.get<JoinedCommunityResponse>(
+      "/api/community/chat/getJoinedCommunity",
+      {
+        headers: { useAuth: true },
+      }
+    ),
 };

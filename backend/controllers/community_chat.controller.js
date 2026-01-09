@@ -179,6 +179,7 @@ export const joinedCommunity = async (req, res) => {
       include: [
         {
           model: CommunityChat,
+          as: "community",
           attributes: ["id", "name"],
         },
       ],

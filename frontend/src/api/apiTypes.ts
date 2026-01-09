@@ -450,3 +450,23 @@ export interface communityChatPayload {
 export interface communityChatResponse {
   message: string;
 }
+
+export interface CommunityChat {
+  id: string;
+  name: string;
+}
+
+export interface CommunityMember {
+  id: string;
+  community_id: string;
+  user_id: string;
+  created_at: string; // ISO date string
+  updated_at: string; // ISO date string
+  communityChat: CommunityChat;
+}
+
+export interface JoinedCommunityResponse {
+  success: boolean;
+  data: CommunityMember[];
+  count: number;
+}

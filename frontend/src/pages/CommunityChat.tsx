@@ -354,7 +354,14 @@ const CommunityChat = () => {
     onCreateCommunity: () => setCreateModalOpen(true),
   };
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    const getJoinedCommunity = async () => {
+      try {
+        const res = communityChatApi.getJoinedCommunity();
+      } catch (error) {}
+    };
+    getJoinedCommunity();
+  }, []);
 
   const handleCreateCommunity = () => {
     // TODO: Implement actual community creation
