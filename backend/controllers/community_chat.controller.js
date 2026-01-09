@@ -305,22 +305,69 @@ export const removeMember = async (req, res) => {
 };
 
 export const getCommunityChatInfo = async (req, res) => {
-  const { communityId } = req.body;
-  if (!communityId)
-    res.status(400).json({ message: "Community Id is required" });
-  const community = await CommunityChat.findOne({
-    where: { community_id: communityId },
-  });
-  if (!community) {
-    res.json(404).json({ message: "community not Found" });
+  try {
+    const { communityId } = req.body;
+    if (!communityId)
+      res.status(400).json({ message: "Community Id is required" });
+    const community = await CommunityChat.findOne({
+      where: { community_id: communityId },
+    });
+    if (!community) {
+      res.json(404).json({ message: "community not Found" });
+    }
+    const communityMembers = await CommunityMember.findAll({
+      where: { community_id: communityId },
+      include: [
+        {
+          model: Comments,
+          as: "Comments", // must match association alias
+          attributes: [],
+          required: false,
+        },
+      ],
+      attributes:{
+        include:[
+          [sequelize.col("User.userid"), "Creator_Username"]
+        ]
+      }
+    });
+    return res.status(200).json({
+      message: "Community Id info found succesfully",
+      community_chat_info: community,
+      community_chat_members: communityMembers,
+      total_members: communityMembers.length,
+    });
+  } catch (error) {
+    console.error(error.message)
+    return res.status(500).json({"message":"Internal Server error in fetching"})
   }
-  const communityMembers = await CommunityMember.findAll({
-    where: { community_id: communityId },
-  });
-  return res.status(200).json({
-    message: "Community Id info found succesfully",
-    community_chat_info: community,
-    community_chat_members: communityMembers,
-    total_members: communityMembers.length,
-  });
 };
+
+
+export const joinCommunity = async (req, res) => {
+  try {
+    const { communityId } = req.body;
+    const user = req.user
+    if (!communityId)
+      res.status(400).json({ "message": "Community Id is required" });
+    const community = await CommunityChat.findOne({
+      where: { community_id: communityId },
+    });
+    if(!community)
+      res.status(404).json({"message":"community not found"})
+  
+    await CommunityMember.create({
+      community_id: communityId,
+      user_id: user.id
+    })
+    return res.status(200).json({
+      message: "Community Id info found succesfully",
+      community_chat_info: community,
+      community_chat_members: communityMembers,
+      total_members: communityMembers.length,
+    });
+  } catch (error) {
+    console.error(error.message)
+    return res.status(500).json({"message":"Internal Server error in adding member"})
+  }
+}
