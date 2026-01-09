@@ -203,11 +203,6 @@ const SidebarContent = ({
             <Plus className="mr-2 h-4 w-4" />
             Create Community
           </Button>
-
-          <Button className="w-full" onClick={handleAllPublicCommunity}>
-            <SearchCheckIcon className="mr-2 h-4 w-4" />
-            All Public Community
-          </Button>
         </div>
 
         <div className="p-4  flex flex-col min-h-0 ">
@@ -221,7 +216,7 @@ const SidebarContent = ({
             />
           </div>
 
-          <ScrollArea className="flex-1 mt-3 ">
+          <ScrollArea className="h-[50%] mt-3 ">
             <div className="space-y-1 pr-2 ">
               {joinedCom.map((community) => (
                 <div
@@ -258,6 +253,10 @@ const SidebarContent = ({
               ))}
             </div>
           </ScrollArea>
+
+          <div className="p-4 border-b flex  gap-2 justify-center">
+            All Public Community
+          </div>
         </div>
       </TabsContent>
 
@@ -344,7 +343,11 @@ const CommunityChat = () => {
     id: string;
     name: string;
     type: "user" | "community";
-  } | null>({ id: "1", name: "John Aquarist", type: "user" });
+  } | null>({
+    id: "Select",
+    name: "Select Who You Want to chat",
+    type: "user",
+  });
   const [communitySearch, setCommunitySearch] = useState("");
   const [userSearch, setUserSearch] = useState("");
   const [message, setMessage] = useState("");
