@@ -4,6 +4,7 @@ import {
   joinedCommunity,
   getPublicCommunities,
   joinCommunity,
+  isMemberCommunity,
 } from "../controllers/community_chat.controller.js";
 import { adminRoute, protectRoute } from "../middleware/auth.middleware.js";
 
@@ -24,5 +25,6 @@ router.get("/getJoinedCommunity", protectRoute, joinedCommunity);
 
 router.get("/public", protectRoute, getPublicCommunities);
 router.post("/join/:id", protectRoute, joinCommunity);
+router.get("/ismember/:id", protectRoute, isMemberCommunity);
 
 export default router;

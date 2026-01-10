@@ -111,7 +111,6 @@ export const createCommunity = async (req, res) => {
   }
 };
 
-
 export const searchCommunuty = async (req, res) => {
   try {
     const { query, page = 1, pageSize = 20 } = req.body;
@@ -199,11 +198,9 @@ export const getCommunityChatInfo = async (req, res) => {
           required: false,
         },
       ],
-      attributes:{
-        include:[
-          [sequelize.col("User.userid"), "Creator_Username"]
-        ]
-      }
+      attributes: {
+        include: [[sequelize.col("User.userid"), "Creator_Username"]],
+      },
     });
     return res.status(200).json({
       message: "Community Id info found succesfully",
@@ -212,8 +209,29 @@ export const getCommunityChatInfo = async (req, res) => {
       total_members: communityMembers.length,
     });
   } catch (error) {
-    console.error(error.message)
-    return res.status(500).json({"message":"Internal Server error in fetching"})
+    console.error(error.message);
+    return res
+      .status(500)
+      .json({ message: "Internal Server error in fetching" });
   }
 };
 
+export const isMemberCommunity = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const communityId = req.params.id;
+    const exists = await CommunityMember.findOne({
+      where: { community_id: communityId, user_id: userId },
+    });
+
+    if (exists) {
+      return res.status(200).json({
+        member: true,
+      });
+    }
+
+    return res.status(200).json({
+      member: false,
+    });
+  } catch (error) {}
+};
