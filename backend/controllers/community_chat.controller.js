@@ -110,3 +110,110 @@ export const createCommunity = async (req, res) => {
     res.status(500).json({ error: "Failed to create community " });
   }
 };
+
+
+export const searchCommunuty = async (req, res) => {
+  try {
+    const { query, page = 1, pageSize = 20 } = req.body;
+
+    const where = {};
+
+    if (query && query.trim()) {
+      where[Op.or] = [
+        { description: { [Op.iLike]: `%${query}%` } },
+        { name: { [Op.iLike]: `%${query}%` } },
+      ];
+    }
+    const limit = pageSize;
+    const offset = (page - 1) * pageSize;
+    const { rows: users, count: total } = await User.findAndCountAll({
+      where,
+      attributes: { exclude: ["password"] },
+      order: [["createdAt", "DESC"]],
+      limit,
+      offset,
+    });
+    res.status(200).json({
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+      users,
+    });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({
+      message: "Server error occured in search community",
+    });
+  }
+};
+
+export const removeMember = async (req, res) => {
+  try {
+    const { community_id, user_id } = req.body;
+    if (!community_id || !user_id) {
+      return res
+        .status(400)
+        .json({ error: "community_id and user_id are required" });
+    }
+    const member = await CommunityMember.findOne({
+      where: { community_id, user_id },
+    });
+
+    if (!member) {
+      return res
+        .status(404)
+        .json({ error: "Member not found in this community" });
+    }
+
+    await member.destroy();
+
+    return res.status(200).json({
+      success: true,
+      message: "Member removed from community successfully",
+    });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: "Failed to remove member from community" });
+  }
+};
+
+export const getCommunityChatInfo = async (req, res) => {
+  try {
+    const { communityId } = req.body;
+    if (!communityId)
+      res.status(400).json({ message: "Community Id is required" });
+    const community = await CommunityChat.findOne({
+      where: { community_id: communityId },
+    });
+    if (!community) {
+      res.json(404).json({ message: "community not Found" });
+    }
+    const communityMembers = await CommunityMember.findAll({
+      where: { community_id: communityId },
+      include: [
+        {
+          model: Comments,
+          as: "Comments", // must match association alias
+          attributes: [],
+          required: false,
+        },
+      ],
+      attributes:{
+        include:[
+          [sequelize.col("User.userid"), "Creator_Username"]
+        ]
+      }
+    });
+    return res.status(200).json({
+      message: "Community Id info found succesfully",
+      community_chat_info: community,
+      community_chat_members: communityMembers,
+      total_members: communityMembers.length,
+    });
+  } catch (error) {
+    console.error(error.message)
+    return res.status(500).json({"message":"Internal Server error in fetching"})
+  }
+};
+
