@@ -28,7 +28,7 @@ import { toast } from "sonner";
 import { communityChatApi } from "@/api/modules/community_chat";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Description } from "@radix-ui/react-toast";
-import { CommunityMember } from "@/api/apiTypes";
+import { CommunityMember, CommunitySection } from "@/api/apiTypes";
 
 const communities = [
   {
@@ -151,9 +151,9 @@ const SidebarContent = ({
   filteredCommunities,
   filteredUsers,
   onSelectChat,
-  handleAllPublicCommunity,
-  onCreateCommunity,
 
+  onCreateCommunity,
+  allCommunity,
   joinedCom,
 }: {
   selectedChat: { id: string; name: string; type: "user" | "community" } | null;
@@ -168,8 +168,9 @@ const SidebarContent = ({
   filteredUsers: typeof recentChats;
   onSelectChat?: () => void;
   onCreateCommunity: () => void;
-  handleAllPublicCommunity: () => void;
+
   joinedCom: CommunityMember[];
+  allCommunity: CommunitySection[];
 }) => (
   <div className="flex flex-col h-full overflow-hidden">
     <Tabs
@@ -177,10 +178,17 @@ const SidebarContent = ({
       className="flex flex-col flex-1 h-full overflow-hidden"
     >
       <div className="p-3 border-b flex-shrink-0">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="community" className="flex items-center gap-1.5">
             <Users className="h-4 w-4" />
             Community
+          </TabsTrigger>
+          <TabsTrigger
+            value="joincommunity"
+            className="flex items-center gap-1.5"
+          >
+            <MessageCircle className="h-4 w-4" />
+            All Community
           </TabsTrigger>
           <TabsTrigger value="user" className="flex items-center gap-1.5">
             <MessageCircle className="h-4 w-4" />
@@ -216,7 +224,7 @@ const SidebarContent = ({
             />
           </div>
 
-          <ScrollArea className="h-[50%] mt-3 ">
+          <ScrollArea className="h-[100%] mt-3 ">
             <div className="space-y-1 pr-2 ">
               {joinedCom.map((community) => (
                 <div
@@ -253,10 +261,72 @@ const SidebarContent = ({
               ))}
             </div>
           </ScrollArea>
+        </div>
+      </TabsContent>
 
-          <div className="p-4 border-b flex  gap-2 justify-center">
-            All Public Community
+      {/* joined Community Tab */}
+      <TabsContent
+        value="joincommunity"
+        className=" flex flex-col m-0 min-h-0 overflow-hidden "
+      >
+        <div className="p-4 border-b flex flex-col gap-2">
+          <Button
+            variant="ocean"
+            className="w-full"
+            onClick={onCreateCommunity}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Create Community
+          </Button>
+        </div>
+
+        <div className="p-4  flex flex-col min-h-0 ">
+          <div className="relative flex-shrink-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search community..."
+              value={communitySearch}
+              onChange={(e) => setCommunitySearch(e.target.value)}
+              className="pl-9"
+            />
           </div>
+
+          <ScrollArea className="h-[100%] mt-3 ">
+            <div className="space-y-1 pr-2 ">
+              {allCommunity.map((community) => (
+                <div
+                  key={community.id}
+                  onClick={() => {
+                    setSelectedChat({
+                      id: community.id,
+                      name: community.name,
+                      type: "community",
+                    });
+                    onSelectChat?.();
+                  }}
+                  className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                    selectedChat?.id === community.id &&
+                    selectedChat?.type === "community"
+                      ? "bg-primary/10 border border-primary/20"
+                      : "hover:bg-accent"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-primary" />
+                    <span className="font-medium text-sm truncate">
+                      {community?.name || "N/A"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate ml-6">
+                    {community?.description || `Welcome to ${community?.name} `}
+                  </p>
+                  <p className="text-xs text-primary/70 ml-6">
+                    {/* {community.online} online */}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
         </div>
       </TabsContent>
 
@@ -357,6 +427,7 @@ const CommunityChat = () => {
   const [newCommunityDescription, setNewCommunityDescription] = useState("");
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
   const [joinedCom, setJoinedCom] = useState<CommunityMember[]>([]);
+  const [allCommunity, setAllCommunity] = useState<CommunitySection[]>([]);
   const [communityCreated, setCommunityCreated] = useState<boolean>(false);
 
   const filteredCommunities = communities.filter((c) =>
@@ -378,13 +449,16 @@ const CommunityChat = () => {
     getJoinCommunity();
   }, [communityCreated]);
 
-  const handleAllPublicCommunity = async () => {
-    try {
-      const res = await communityChatApi.getAllPublicCommunity();
-
-      console.log(res?.data?.data);
-    } catch (error) {}
-  };
+  useEffect(() => {
+    const handleAllPublicCommunity = async () => {
+      try {
+        const res = await communityChatApi.getAllPublicCommunity();
+        setAllCommunity(res?.data?.data);
+        console.log(res?.data?.data);
+      } catch (error) {}
+    };
+    handleAllPublicCommunity();
+  }, [communityCreated]);
 
   const handleCreateCommunity = async () => {
     // TODO: Implement actual community creation
@@ -466,7 +540,7 @@ const CommunityChat = () => {
       </Dialog>
       <div className="flex h-[calc(100vh-130px)] min-h-[500px] border rounded-lg overflow-hidden bg-card">
         {/* Desktop Sidebar */}
-        <div className="hidden md:flex w-80 border-r flex-col bg-muted/30">
+        <div className="hidden md:flex w-[400px] border-r flex-col bg-muted/30">
           <SidebarContent
             selectedChat={selectedChat}
             setSelectedChat={setSelectedChat}
@@ -477,7 +551,7 @@ const CommunityChat = () => {
             filteredCommunities={filteredCommunities}
             filteredUsers={filteredUsers}
             joinedCom={joinedCom}
-            handleAllPublicCommunity={handleAllPublicCommunity}
+            allCommunity={allCommunity}
             onCreateCommunity={() => setCreateModalOpen(true)}
           />
         </div>
@@ -507,7 +581,7 @@ const CommunityChat = () => {
                       filteredUsers={filteredUsers}
                       joinedCom={joinedCom}
                       onCreateCommunity={() => setCreateModalOpen(true)}
-                      handleAllPublicCommunity={handleAllPublicCommunity}
+                      allCommunity={allCommunity}
                       onSelectChat={() => setSheetOpen(false)}
                     />
                   </SheetContent>
@@ -613,7 +687,7 @@ const CommunityChat = () => {
                       filteredUsers={filteredUsers}
                       joinedCom={joinedCom}
                       onCreateCommunity={() => setCreateModalOpen(true)}
-                      handleAllPublicCommunity={handleAllPublicCommunity}
+                      allCommunity={allCommunity}
                       onSelectChat={() => setSheetOpen(false)}
                     />
                   </SheetContent>
