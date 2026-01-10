@@ -24,7 +24,7 @@ Community.init(
 
     is_private: {
       type: DataTypes.BOOLEAN,
-      allowNull: false
+      allowNull: false,
     },
 
     created_by: {

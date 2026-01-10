@@ -4,7 +4,15 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Users, Send, Menu, MessageCircle } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Users,
+  Send,
+  Menu,
+  MessageCircle,
+  SearchCheckIcon,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -143,7 +151,9 @@ const SidebarContent = ({
   filteredCommunities,
   filteredUsers,
   onSelectChat,
+  handleAllPublicCommunity,
   onCreateCommunity,
+
   joinedCom,
 }: {
   selectedChat: { id: string; name: string; type: "user" | "community" } | null;
@@ -158,6 +168,7 @@ const SidebarContent = ({
   filteredUsers: typeof recentChats;
   onSelectChat?: () => void;
   onCreateCommunity: () => void;
+  handleAllPublicCommunity: () => void;
   joinedCom: CommunityMember[];
 }) => (
   <div className="flex flex-col h-full overflow-hidden">
@@ -183,7 +194,7 @@ const SidebarContent = ({
         value="community"
         className=" flex flex-col m-0 min-h-0 overflow-hidden "
       >
-        <div className="p-4 border-b">
+        <div className="p-4 border-b flex flex-col gap-2">
           <Button
             variant="ocean"
             className="w-full"
@@ -205,7 +216,7 @@ const SidebarContent = ({
             />
           </div>
 
-          <ScrollArea className="flex-1 mt-3 ">
+          <ScrollArea className="h-[50%] mt-3 ">
             <div className="space-y-1 pr-2 ">
               {joinedCom.map((community) => (
                 <div
@@ -219,7 +230,7 @@ const SidebarContent = ({
                     onSelectChat?.();
                   }}
                   className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                    selectedChat?.id === community.id &&
+                    selectedChat?.id === community.community_id &&
                     selectedChat?.type === "community"
                       ? "bg-primary/10 border border-primary/20"
                       : "hover:bg-accent"
@@ -242,6 +253,10 @@ const SidebarContent = ({
               ))}
             </div>
           </ScrollArea>
+
+          <div className="p-4 border-b flex  gap-2 justify-center">
+            All Public Community
+          </div>
         </div>
       </TabsContent>
 
@@ -328,7 +343,11 @@ const CommunityChat = () => {
     id: string;
     name: string;
     type: "user" | "community";
-  } | null>({ id: "1", name: "John Aquarist", type: "user" });
+  } | null>({
+    id: "Select",
+    name: "Select Who You Want to chat",
+    type: "user",
+  });
   const [communitySearch, setCommunitySearch] = useState("");
   const [userSearch, setUserSearch] = useState("");
   const [message, setMessage] = useState("");
@@ -338,6 +357,7 @@ const CommunityChat = () => {
   const [newCommunityDescription, setNewCommunityDescription] = useState("");
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
   const [joinedCom, setJoinedCom] = useState<CommunityMember[]>([]);
+  const [communityCreated, setCommunityCreated] = useState<boolean>(false);
 
   const filteredCommunities = communities.filter((c) =>
     c.name.toLowerCase().includes(communitySearch.toLowerCase())
@@ -356,28 +376,23 @@ const CommunityChat = () => {
       } catch (error) {}
     };
     getJoinCommunity();
-  }, []);
+  }, [communityCreated]);
 
-  const sidebarProps = {
-    selectedChat,
-    setSelectedChat,
-    communitySearch,
-    setCommunitySearch,
-    userSearch,
-    setUserSearch,
-    filteredCommunities,
-    filteredUsers,
-    onCreateCommunity: () => setCreateModalOpen(true),
-    joinedCom,
+  const handleAllPublicCommunity = async () => {
+    try {
+      const res = await communityChatApi.getAllPublicCommunity();
+
+      console.log(res?.data?.data);
+    } catch (error) {}
   };
 
-  const handleCreateCommunity = () => {
+  const handleCreateCommunity = async () => {
     // TODO: Implement actual community creation
     if (!newCommunityDescription.trim() || !newCommunityName.trim()) {
       toast.error("Please give description and title");
     }
     try {
-      const res = communityChatApi.create({
+      const res = await communityChatApi.create({
         name: newCommunityName,
         description: newCommunityDescription,
         is_private: isPrivate,
@@ -386,6 +401,7 @@ const CommunityChat = () => {
       setNewCommunityName("");
       setNewCommunityDescription("");
       setCreateModalOpen(false);
+      setCommunityCreated((prev) => !prev);
     } catch (error) {
       toast.error("Something went wrong creating the community");
     }
@@ -451,7 +467,19 @@ const CommunityChat = () => {
       <div className="flex h-[calc(100vh-130px)] min-h-[500px] border rounded-lg overflow-hidden bg-card">
         {/* Desktop Sidebar */}
         <div className="hidden md:flex w-80 border-r flex-col bg-muted/30">
-          <SidebarContent {...sidebarProps} />
+          <SidebarContent
+            selectedChat={selectedChat}
+            setSelectedChat={setSelectedChat}
+            communitySearch={communitySearch}
+            setCommunitySearch={setCommunitySearch}
+            userSearch={userSearch}
+            setUserSearch={setUserSearch}
+            filteredCommunities={filteredCommunities}
+            filteredUsers={filteredUsers}
+            joinedCom={joinedCom}
+            handleAllPublicCommunity={handleAllPublicCommunity}
+            onCreateCommunity={() => setCreateModalOpen(true)}
+          />
         </div>
 
         {/* Chat Body */}
@@ -469,7 +497,17 @@ const CommunityChat = () => {
                   </SheetTrigger>
                   <SheetContent side="left" className="w-80 p-0">
                     <SidebarContent
-                      {...sidebarProps}
+                      selectedChat={selectedChat}
+                      setSelectedChat={setSelectedChat}
+                      communitySearch={communitySearch}
+                      setCommunitySearch={setCommunitySearch}
+                      userSearch={userSearch}
+                      setUserSearch={setUserSearch}
+                      filteredCommunities={filteredCommunities}
+                      filteredUsers={filteredUsers}
+                      joinedCom={joinedCom}
+                      onCreateCommunity={() => setCreateModalOpen(true)}
+                      handleAllPublicCommunity={handleAllPublicCommunity}
                       onSelectChat={() => setSheetOpen(false)}
                     />
                   </SheetContent>
@@ -565,7 +603,17 @@ const CommunityChat = () => {
                   </SheetTrigger>
                   <SheetContent side="left" className="w-80 p-0">
                     <SidebarContent
-                      {...sidebarProps}
+                      selectedChat={selectedChat}
+                      setSelectedChat={setSelectedChat}
+                      communitySearch={communitySearch}
+                      setCommunitySearch={setCommunitySearch}
+                      userSearch={userSearch}
+                      setUserSearch={setUserSearch}
+                      filteredCommunities={filteredCommunities}
+                      filteredUsers={filteredUsers}
+                      joinedCom={joinedCom}
+                      onCreateCommunity={() => setCreateModalOpen(true)}
+                      handleAllPublicCommunity={handleAllPublicCommunity}
                       onSelectChat={() => setSheetOpen(false)}
                     />
                   </SheetContent>

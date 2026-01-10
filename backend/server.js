@@ -59,7 +59,7 @@ const startServer = async () => {
   try {
     await sequelize.authenticate();
     console.log("PostgreSQL connected");
-    if (process.env.ENVIRONMENT == "DEV") {
+    if (process.env.ENVIRONMENT == "DE") {
       await sequelize.sync({ alter: true });
       console.log("Models synced");
     }
