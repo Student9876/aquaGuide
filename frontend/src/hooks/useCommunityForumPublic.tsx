@@ -1,8 +1,10 @@
-
 import { getAllCommunityForum } from "@/api/apiTypes";
 import { community_forum_api } from "@/api/modules/community_forum";
 import { useQuery } from "@tanstack/react-query";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { CommunityForumPayload } from "@/api/apiTypes";
+import { toast } from "sonner";
 
 //approved community forums displayed here
 //also to be used in user display page 
@@ -37,5 +39,18 @@ export const useCommunityForumPublicInfinite = () => {
     },
     initialPageParam: 1, // <--- this fixes the TypeScript error
     staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useCreateCommunityForum = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CommunityForumPayload) => community_forum_api.create(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["communityForumPublic"] });
+    },
+    onError: () => {
+      toast.error("Failed to create Community Forum");
+    },
   });
 };
