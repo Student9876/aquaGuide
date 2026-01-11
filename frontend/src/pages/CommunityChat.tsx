@@ -13,6 +13,8 @@ import {
   MessageCircle,
   SearchCheckIcon,
   UserPlus,
+  Link,
+  LogIn,
 } from "lucide-react";
 import {
   Dialog,
@@ -420,6 +422,7 @@ const CommunityChat = () => {
     type: "user",
   });
   const [communitySearch, setCommunitySearch] = useState("");
+  const userid = localStorage.getItem("userid");
   const [userSearch, setUserSearch] = useState("");
   const [message, setMessage] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -444,6 +447,9 @@ const CommunityChat = () => {
   useEffect(() => {
     const getJoinCommunity = async () => {
       try {
+        if (!userid) {
+          return;
+        }
         const res = await communityChatApi.getJoinedCommunity();
         setJoinedCom(res?.data?.data || []);
         console.log(res?.data?.data);
@@ -475,6 +481,9 @@ const CommunityChat = () => {
     const checkMember = async () => {
       setLoading(true);
       try {
+        if (!userid) {
+          return;
+        }
         const res = await communityChatApi.checkMember(selectedChat.id);
         setIsMember(res?.data?.member || false);
       } catch (error) {
@@ -672,7 +681,17 @@ const CommunityChat = () => {
 
               {/* Message Input */}
 
-              {!loading && !isMember && (
+              {!userid && (
+                <div className="p-4 border-t">
+                  <div className="flex flex-col items-center justify-center gap-3 py-4">
+                    <p className="text-muted-foreground text-sm">
+                      Please login or register to participate
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {!loading && !isMember && userid && (
                 <div className="p-4 border-t">
                   <div className="flex flex-col items-center justify-center gap-3 py-4">
                     <p className="text-muted-foreground text-sm">
@@ -686,7 +705,7 @@ const CommunityChat = () => {
                 </div>
               )}
 
-              {!loading && isMember && (
+              {!loading && isMember && userid && (
                 <div className="p-4 border-t">
                   <div className="flex gap-2">
                     <Input

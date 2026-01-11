@@ -23,7 +23,7 @@ const router = express.Router();
 router.post("/createcommunity", protectRoute, adminRoute, createCommunity);
 router.get("/getJoinedCommunity", protectRoute, joinedCommunity);
 
-router.get("/public", protectRoute, getPublicCommunities);
+router.get("/public", getPublicCommunities);
 router.post("/join/:id", protectRoute, joinCommunity);
 router.get("/ismember/:id", protectRoute, isMemberCommunity);
 
