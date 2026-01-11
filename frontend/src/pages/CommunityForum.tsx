@@ -38,7 +38,14 @@ const CommunityForum = () => {
         <p className="text-lg sm:text-xl text-muted-foreground mb-6">
           Ask questions, share advice, and showcase your aquariums! Join discussions with other hobbyists.
         </p>
-        <Button variant="ocean" size="lg" className="w-full sm:w-auto">Start a Discussion</Button>
+        <Button
+          variant="ocean"
+          size="lg"
+          className="w-full sm:w-auto"
+          onClick={() => navigate("/forum/create")}
+        >
+          Start a Discussion
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

@@ -193,8 +193,8 @@ export const getCommunityChatInfo = async (req, res) => {
       where: { community_id: communityId },
       include: [
         {
-          model: Comments,
-          as: "Comments", // must match association alias
+          model: User,
+          as: "user", // must match association alias
           attributes: [],
           required: false,
         },
