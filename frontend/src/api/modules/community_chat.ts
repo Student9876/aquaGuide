@@ -28,4 +28,18 @@ export const communityChatApi = {
     httpClient.get<AllCommunityResponse>("/api/community/chat/public", {
       headers: { useAuth: true },
     }),
+
+  checkMember: async (id: string) =>
+    httpClient.get<{ member: boolean }>(`/api/community/chat/ismember/${id}`, {
+      headers: { useAuth: true },
+    }),
+
+  joinCommunity: async (id: string) =>
+    httpClient.post<{ member: boolean }>(
+      `/api/community/chat/join/${id}`,
+      {},
+      {
+        headers: { useAuth: true },
+      }
+    ),
 };

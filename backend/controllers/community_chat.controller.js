@@ -5,27 +5,32 @@ import CommunityMember from "../models/community_member.model.js";
 import Community from "../models/community_chat.model.js";
 
 export const joinCommunity = async (req, res) => {
-  const communityId = req.params.id;
-  const userId = req.user.id;
+  try {
+    const communityId = req.params.id;
+    const userId = req.user.id;
 
-  const exists = await CommunityMember.findOne({
-    where: { community_id: communityId, user_id: userId },
-  });
-
-  if (exists) {
-    return res.status(400).json({
-      success: false,
-      error: "Already a member",
+    const exists = await CommunityMember.findOne({
+      where: { community_id: communityId, user_id: userId },
     });
+
+    if (exists) {
+      return res.status(400).json({
+        success: false,
+        error: "Already a member",
+      });
+    }
+
+    await CommunityMember.create({
+      community_id: communityId,
+      user_id: userId,
+      role: "member",
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error  joiningcommunity:", error);
+    res.status(500).json({ error: "Failed to join community " });
   }
-
-  await CommunityMember.create({
-    community_id: communityId,
-    user_id: userId,
-    role: "member",
-  });
-
-  res.json({ success: true });
 };
 
 export const getPublicCommunities = async (req, res) => {

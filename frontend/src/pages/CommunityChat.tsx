@@ -12,6 +12,7 @@ import {
   Menu,
   MessageCircle,
   SearchCheckIcon,
+  UserPlus,
 } from "lucide-react";
 import {
   Dialog,
@@ -429,6 +430,8 @@ const CommunityChat = () => {
   const [joinedCom, setJoinedCom] = useState<CommunityMember[]>([]);
   const [allCommunity, setAllCommunity] = useState<CommunitySection[]>([]);
   const [communityCreated, setCommunityCreated] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [isMember, setIsMember] = useState<boolean>(false);
 
   const filteredCommunities = communities.filter((c) =>
     c.name.toLowerCase().includes(communitySearch.toLowerCase())
@@ -459,6 +462,29 @@ const CommunityChat = () => {
     };
     handleAllPublicCommunity();
   }, [communityCreated]);
+
+  const handleJoinCommunity = async () => {
+    try {
+      const res = await communityChatApi.joinCommunity(selectedChat.id);
+
+      setCommunityCreated((prev) => !prev);
+    } catch (error) {}
+  };
+
+  useEffect(() => {
+    const checkMember = async () => {
+      setLoading(true);
+      try {
+        const res = await communityChatApi.checkMember(selectedChat.id);
+        setIsMember(res?.data?.member || false);
+      } catch (error) {
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkMember();
+  }, [selectedChat, communityCreated]);
 
   const handleCreateCommunity = async () => {
     // TODO: Implement actual community creation
@@ -645,24 +671,41 @@ const CommunityChat = () => {
               </ScrollArea>
 
               {/* Message Input */}
-              <div className="p-4 border-t">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Type a message..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="flex-1"
-                    onKeyPress={(e) => e.key === "Enter" && setMessage("")}
-                  />
-                  <Button
-                    variant="ocean"
-                    size="icon"
-                    onClick={() => setMessage("")}
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
+
+              {!loading && !isMember && (
+                <div className="p-4 border-t">
+                  <div className="flex flex-col items-center justify-center gap-3 py-4">
+                    <p className="text-muted-foreground text-sm">
+                      You haven't joined this community
+                    </p>
+                    <Button variant="ocean" onClick={handleJoinCommunity}>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Join Community
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {!loading && isMember && (
+                <div className="p-4 border-t">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Type a message..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      className="flex-1"
+                      onKeyPress={(e) => e.key === "Enter" && setMessage("")}
+                    />
+                    <Button
+                      variant="ocean"
+                      size="icon"
+                      onClick={() => setMessage("")}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-muted-foreground">
