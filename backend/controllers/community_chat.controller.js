@@ -3,6 +3,7 @@ import sequelize from "../lib/db.js";
 import { Op, where, fn, col } from "sequelize";
 import CommunityMember from "../models/community_member.model.js";
 import Community from "../models/community_chat.model.js";
+import CommunityMessage from "../models/community_chat_messages.model.js";
 
 export const joinCommunity = async (req, res) => {
   try {
@@ -239,4 +240,23 @@ export const isMemberCommunity = async (req, res) => {
       member: false,
     });
   } catch (error) {}
+};
+
+export const sendCommunityMessage = async (req, res) => {
+  try {
+  } catch (error) {}
+};
+
+export const getCommunityMessages = async (req, res) => {
+  const { communityId } = req.params.id;
+  const { page = 1, limit = 20 } = req.query;
+
+  const messages = await CommunityMessage.findAll({
+    where: { community_id: communityId },
+    order: [["createdAt", "DESC"]], // 🔥 latest first
+    limit: Number(limit),
+    offset: (page - 1) * limit,
+  });
+
+  res.json(messages.reverse()); // optional: oldest → newest for UI
 };

@@ -24,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { socket } from "../socket/index";
 
 import { Label } from "recharts";
 import { Textarea } from "@/components/ui/textarea";
@@ -443,6 +444,16 @@ const CommunityChat = () => {
   const filteredUsers = recentChats.filter((u) =>
     u.name.toLowerCase().includes(userSearch.toLowerCase())
   );
+
+  useEffect(() => {
+    socket.connect();
+
+    socket.emit("join-community", selectedChat.id);
+
+    return () => {
+      socket.disconnect(); // clean exit
+    };
+  }, [selectedChat]);
 
   useEffect(() => {
     const getJoinCommunity = async () => {
