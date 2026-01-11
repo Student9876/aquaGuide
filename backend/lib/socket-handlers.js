@@ -88,11 +88,13 @@ export function setupChatSocket(io) {
           include: [
             {
               model: User,
-              as: sender,
+              as: "sender",
               attributes: ["id", "userid", "name"],
             },
           ],
         });
+
+        console.log(messageWithUser);
 
         // Broadcast to community
         chatNamespace.to(communityId).emit("message-received", {
@@ -100,19 +102,13 @@ export function setupChatSocket(io) {
           community_id: communityId,
           message: messageWithUser.message,
           created_at: messageWithUser.created_at,
-          User: messageWithUser.sender,
+          sender: messageWithUser.sender,
         });
 
-        callback({
-          success: true,
-          data: messageWithUser,
-        });
+        callback?.({ success: true });
       } catch (error) {
         console.error("[Chat] Error sending message:", error);
-        callback({
-          success: false,
-          error: "Failed to send message",
-        });
+        callback?.({ success: false });
       }
     });
 

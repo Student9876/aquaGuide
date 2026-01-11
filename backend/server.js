@@ -75,7 +75,6 @@ const startServer = async () => {
     });
 
     // Setup chat socket handlers
-    setupChatSocket(io);
 
     // Default Socket.IO connection handler (for backward compatibility)
     io.on("connection", (socket) => {
@@ -85,6 +84,8 @@ const startServer = async () => {
         console.log("[Socket.IO] Default disconnect:", socket.id);
       });
     });
+
+    setupChatSocket(io);
 
     server.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);

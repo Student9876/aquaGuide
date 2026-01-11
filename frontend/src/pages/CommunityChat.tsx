@@ -106,45 +106,6 @@ const recentChats = [
   },
 ];
 
-const mockMessages = [
-  {
-    id: 1,
-    sender: "John Aquarist",
-    content: "Hey! How's your tank doing?",
-    time: "10:30 AM",
-    isMe: false,
-  },
-  {
-    id: 2,
-    sender: "Me",
-    content: "It's doing great! The plants are thriving.",
-    time: "10:32 AM",
-    isMe: true,
-  },
-  {
-    id: 3,
-    sender: "John Aquarist",
-    content: "That's awesome! What fertilizers are you using?",
-    time: "10:33 AM",
-    isMe: false,
-  },
-  {
-    id: 4,
-    sender: "Me",
-    content:
-      "I'm using a liquid CO2 supplement and root tabs for the heavy feeders.",
-    time: "10:35 AM",
-    isMe: true,
-  },
-  {
-    id: 5,
-    sender: "John Aquarist",
-    content: "Thanks for the help!",
-    time: "10:36 AM",
-    isMe: false,
-  },
-];
-
 const SidebarContent = ({
   selectedChat,
   setSelectedChat,
@@ -424,6 +385,7 @@ const CommunityChat = () => {
   });
   const [communitySearch, setCommunitySearch] = useState("");
   const userid = localStorage.getItem("userid");
+  const id = localStorage.getItem("id");
   const [userSearch, setUserSearch] = useState("");
   const [message, setMessage] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -436,6 +398,49 @@ const CommunityChat = () => {
   const [communityCreated, setCommunityCreated] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [isMember, setIsMember] = useState<boolean>(false);
+  const [messages, setMessages] = useState([]);
+
+  const mapMessage = (msg: any) => ({
+    id: msg.id,
+    isMe: msg.sender?.id === id,
+    sender: msg.sender?.name || "Unknown",
+    content: msg.message,
+    time: new Date(msg.created_at).toLocaleTimeString(),
+  });
+
+  useEffect(() => {
+    socket.emit("join-community", selectedChat.id);
+  }, [selectedChat.id]);
+
+  /**
+   * Realtime listener (ONLY ONCE)
+   */
+  useEffect(() => {
+    const handler = (msg) => {
+      setMessages((prev) => [...prev, mapMessage(msg)]);
+      console.log("send message", mapMessage(msg));
+    };
+
+    socket.on("message-received", handler);
+
+    return () => {
+      socket.off("message-received", handler);
+    };
+  }, []);
+
+  const sendMessage = () => {
+    socket.emit(
+      "send-message",
+      {
+        communityId: selectedChat.id,
+        message: message,
+      },
+      (response) => {
+        console.log(response);
+        setMessage("");
+      }
+    );
+  };
 
   const filteredCommunities = communities.filter((c) =>
     c.name.toLowerCase().includes(communitySearch.toLowerCase())
@@ -444,16 +449,6 @@ const CommunityChat = () => {
   const filteredUsers = recentChats.filter((u) =>
     u.name.toLowerCase().includes(userSearch.toLowerCase())
   );
-
-  useEffect(() => {
-    socket.connect();
-
-    socket.emit("join-community", selectedChat.id);
-
-    return () => {
-      socket.disconnect(); // clean exit
-    };
-  }, [selectedChat]);
 
   useEffect(() => {
     const getJoinCommunity = async () => {
@@ -655,7 +650,7 @@ const CommunityChat = () => {
               {/* Messages */}
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">
-                  {mockMessages.map((msg) => (
+                  {messages.map((msg) => (
                     <div
                       key={msg.id}
                       className={`flex ${
@@ -726,11 +721,7 @@ const CommunityChat = () => {
                       className="flex-1"
                       onKeyPress={(e) => e.key === "Enter" && setMessage("")}
                     />
-                    <Button
-                      variant="ocean"
-                      size="icon"
-                      onClick={() => setMessage("")}
-                    >
+                    <Button variant="ocean" size="icon" onClick={sendMessage}>
                       <Send className="h-4 w-4" />
                     </Button>
                   </div>

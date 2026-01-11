@@ -3,8 +3,8 @@ import config from "../api/config";
 
 export const socket = io(`${config.baseUrl}/api/community/chat`, {
   auth: {
-    userId: localStorage.getItem("userId"), // TEMP (JWT later)
+    userId: localStorage.getItem("id"), // TEMP (JWT later)
   },
-  autoConnect: false, // IMPORTANT
+  autoConnect: true, // IMPORTANT
   transports: ["websocket"],
 });

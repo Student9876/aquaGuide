@@ -1,3 +1,5 @@
+import { UUID } from "crypto";
+
 export interface RegisterPayload {
   name: string;
   email: string;
@@ -14,7 +16,7 @@ export interface LoginPayload {
 }
 
 export interface RegisterResponse {
-  id: 1;
+  id: UUID;
   name: string;
   userid: string;
   email: string;
