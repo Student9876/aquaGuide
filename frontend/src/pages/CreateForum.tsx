@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import JoditEditor from "jodit-react";
 import { useNavigate } from "react-router-dom";
 import { useCreateCommunityForum } from "@/hooks/useCommunityForumPublic";
@@ -14,12 +14,12 @@ const config = {
 };
 
 const CreateForum = () => {
+  const [open, setOpen] = useState(true);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const editor = useRef(null);
   const navigate = useNavigate();
-
   const createForumMutation = useCreateCommunityForum();
 
   const handleCreate = async () => {
@@ -29,6 +29,7 @@ const CreateForum = () => {
       { title, content },
       {
         onSuccess: () => {
+          setOpen(false);
           navigate("/community-forum");
         },
         onError: () => {
@@ -42,41 +43,46 @@ const CreateForum = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-2xl">
-      {/* Create Guide Form */}
-      <Card className="border-border bg-card">
-        <CardHeader>
-          <CardTitle className="text-lg">Create New Forum</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="guide-title">Forum Title</Label>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) navigate("/community-forum"); }}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Create New Forum</DialogTitle>
+          <DialogDescription>
+            Start a new discussion with the community.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label>Forum Title</Label>
             <Input
-              id="guide-title"
+              id="forum-title"
               placeholder="Enter forum title..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="guide-content">Forum Content</Label>
-            <div className="text-black">
-              <JoditEditor
-                ref={editor}
-                value={content}
-                config={config}
-                tabIndex={1}
-                onBlur={setContent}
-                className="text-black"
-              />
-            </div>
+          <div className="grid gap-2">
+            <Label>Forum Content</Label>
+            <JoditEditor
+              ref={editor}
+              value={content}
+              config={config}
+              tabIndex={1}
+              onBlur={setContent}
+              className="text-black"
+            />
           </div>
-          <Button onClick={handleCreate} className="w-full sm:w-auto" disabled={loading}>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleCreate} disabled={loading || !title.trim()}>
             {loading ? "Posting..." : "Post Forum"}
           </Button>
-        </CardContent>
-      </Card>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
