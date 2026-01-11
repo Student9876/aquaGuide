@@ -3,22 +3,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, ThumbsUp, Eye } from "lucide-react";
 import { useCommunityForumPublic } from "@/hooks/useCommunityForumPublic";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import CircularLoader from "@/components/ui/CircularLoader";
 import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import JoditEditor from "jodit-react";
+import { useCreateCommunityForum } from "@/hooks/useCommunityForumPublic";
 
 
 
 
 const CommunityForum = () => {
   const [pageNumber, setPageNumber] = useState(1);
-
   const { data, isLoading, isError } = useCommunityForumPublic(pageNumber);
-
   const navigate = useNavigate();
-
   const forumPosts = data?.data ?? [];
   const totalPages = data?.pagination?.total_pages ?? 1;
+
+  // Modal state and form state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [loading, setLoading] = useState(false);
+  const editor = useRef(null);
+  const createForumMutation = useCreateCommunityForum();
 
   const handleNextPage = () => {
     if (pageNumber < totalPages) setPageNumber((prev) => prev + 1);
@@ -26,6 +36,27 @@ const CommunityForum = () => {
 
   const handlePrevPage = () => {
     setPageNumber((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleCreate = async () => {
+    if (!title.trim() || !content.trim()) return;
+    setLoading(true);
+    createForumMutation.mutate(
+      { title, content },
+      {
+        onSuccess: () => {
+          setModalOpen(false);
+          setTitle("");
+          setContent("");
+        },
+        onError: () => {
+          alert("Failed to create forum post");
+        },
+        onSettled: () => {
+          setLoading(false);
+        },
+      }
+    );
   };
 
   if (isLoading) return <CircularLoader />;
@@ -38,8 +69,56 @@ const CommunityForum = () => {
         <p className="text-lg sm:text-xl text-muted-foreground mb-6">
           Ask questions, share advice, and showcase your aquariums! Join discussions with other hobbyists.
         </p>
-        <Button variant="ocean" size="lg" className="w-full sm:w-auto">Start a Discussion</Button>
+        <Button
+          variant="ocean"
+          size="lg"
+          className="w-full sm:w-auto"
+          onClick={() => setModalOpen(true)}
+        >
+          Start a Discussion
+        </Button>
       </div>
+
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Create New Forum</DialogTitle>
+            <DialogDescription>
+              Start a new discussion with the community.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Forum Title</Label>
+              <Input
+                id="forum-title"
+                placeholder="Enter forum title..."
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Forum Content</Label>
+              <JoditEditor
+                ref={editor}
+                value={content}
+                config={{ readonly: false, height: 300, toolbarSticky: false }}
+                tabIndex={1}
+                onBlur={setContent}
+                className="text-black"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreate} disabled={loading || !title.trim()}>
+              {loading ? "Posting..." : "Post Forum"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-3 space-y-4">
