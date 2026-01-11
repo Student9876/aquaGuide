@@ -1,4 +1,5 @@
 import CommunityChat from "../models/community_chat.model.js";
+import CommunityMessage from "../models/community_chat_messages.model.js";
 import User from "../models/user.model.js";
 
 export function setupChatSocket(io) {
@@ -76,17 +77,18 @@ export function setupChatSocket(io) {
         }
 
         // Store message in DB
-        const newMessage = await CommunityChat.create({
+        const newMessage = await CommunityMessage.create({
           user_id: userId,
           community_id: communityId, // room_id == community_id
           message: message.trim(),
         });
 
         // Fetch with user data
-        const messageWithUser = await CommunityChat.findByPk(newMessage.id, {
+        const messageWithUser = await CommunityMessage.findByPk(newMessage.id, {
           include: [
             {
               model: User,
+              as: sender,
               attributes: ["id", "userid", "name"],
             },
           ],
@@ -98,9 +100,7 @@ export function setupChatSocket(io) {
           community_id: communityId,
           message: messageWithUser.message,
           created_at: messageWithUser.created_at,
-          edited_at: messageWithUser.edited_at,
-          is_deleted: messageWithUser.is_deleted,
-          User: messageWithUser.User,
+          User: messageWithUser.sender,
         });
 
         callback({
