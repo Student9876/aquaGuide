@@ -42,4 +42,9 @@ export const communityChatApi = {
         headers: { useAuth: true },
       }
     ),
+
+  getCommunityMessages: async (id: string, page: number) =>
+    httpClient.get<any>(`/api/community/chat/message/${id}?page=${page}`, {
+      headers: { useAuth: true },
+    }),
 };
