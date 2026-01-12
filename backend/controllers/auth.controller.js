@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { Op } from "sequelize";
 import bcrypt from "bcryptjs";
 import User from "../models/user.model.js"; // Sequelize model
+import Guest from "../models/guestModel.js";
 import VideoGuide from "../models/video.model.js";
 import TextModel from "../models/text.model.js";
 import axios from "axios";

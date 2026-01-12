@@ -17,6 +17,8 @@ import speciesPublicRoutes from "./routes/species.public.route.js";
 import textGuideRoutes from "./routes/text_guide.route.js";
 import { setupChatSocket } from "./lib/socket-handlers.js";
 import faqRoutes from "./routes/faq.route.js";
+import performanceRoutes from "./routes/performance.route.js";
+import { setupPerformanceSocket } from "./lib/performance.socket.js";
 
 dotenv.config();
 
@@ -46,6 +48,7 @@ app.use("/api/community", communityRoutes);
 app.use("/api/community/chat", communityChatsRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api/faqs", faqRoutes);
+app.use("/api/performance", performanceRoutes);
 
 app.get("/", (req, res) => {
   res.send(
@@ -76,6 +79,7 @@ const startServer = async () => {
 
     // Setup chat socket handlers
     setupChatSocket(io);
+    setupPerformanceSocket(io);
 
     // Default Socket.IO connection handler (for backward compatibility)
     io.on("connection", (socket) => {
