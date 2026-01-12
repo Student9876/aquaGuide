@@ -248,15 +248,46 @@ export const sendCommunityMessage = async (req, res) => {
 };
 
 export const getCommunityMessages = async (req, res) => {
-  const { communityId } = req.params.id;
-  const { page = 1, limit = 20 } = req.query;
+  try {
+    const { id: communityId } = req.params;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
 
-  const messages = await CommunityMessage.findAll({
-    where: { community_id: communityId },
-    order: [["createdAt", "DESC"]], // 🔥 latest first
-    limit: Number(limit),
-    offset: (page - 1) * limit,
-  });
+    if (!communityId) {
+      return res.status(400).json({ error: "communityId is required" });
+    }
 
-  res.json(messages.reverse()); // optional: oldest → newest for UI
+    const { rows: messages, count: totalItems } =
+      await CommunityMessage.findAndCountAll({
+        where: { community_id: communityId },
+        include: [
+          {
+            model: User,
+            as: "sender",
+            attributes: ["id", "name"],
+          },
+        ],
+        order: [["created_at", "DESC"]],
+        limit,
+        offset,
+      });
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    res.json({
+      data: messages.reverse(), // oldest → newest for UI
+      pagination: {
+        totalItems,
+        totalPages,
+        currentPage: page,
+        limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+    });
+  } catch (error) {
+    console.error("getCommunityMessages error:", error);
+    res.status(500).json({ error: error.message });
+  }
 };

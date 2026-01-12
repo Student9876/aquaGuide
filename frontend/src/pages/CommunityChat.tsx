@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -399,6 +399,13 @@ const CommunityChat = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [isMember, setIsMember] = useState<boolean>(false);
   const [messages, setMessages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const prevScrollHeightRef = useRef(0);
+  const [mesSend, setMesSend] = useState<boolean>(false);
+  const topRef = useRef<HTMLDivElement>(null);
+  const lastMessageRef = useRef<HTMLDivElement>(null);
 
   const mapMessage = (msg: any) => ({
     id: msg.id,
@@ -409,6 +416,25 @@ const CommunityChat = () => {
   });
 
   useEffect(() => {
+    if (!selectedChat?.id) return;
+    const loadMessages = async () => {
+      setMessages([]); // clear previous chat
+      setPage(1);
+      setHasMore(true);
+
+      const res = await communityChatApi.getCommunityMessages(
+        selectedChat.id,
+        1
+      );
+
+      setMessages(res.data.data.map(mapMessage) || []); // oldest → newest
+      setHasMore(res?.data?.pagination?.hasNextPage || false);
+    };
+
+    loadMessages();
+  }, [selectedChat]);
+
+  useEffect(() => {
     socket.emit("join-community", selectedChat.id);
   }, [selectedChat.id]);
 
@@ -416,7 +442,7 @@ const CommunityChat = () => {
    * Realtime listener (ONLY ONCE)
    */
   useEffect(() => {
-    const handler = (msg) => {
+    const handler = (msg: any) => {
       setMessages((prev) => [...prev, mapMessage(msg)]);
       console.log("send message", mapMessage(msg));
     };
@@ -440,7 +466,139 @@ const CommunityChat = () => {
         setMessage("");
       }
     );
+    setMesSend((prev) => !prev);
   };
+
+  // Load more messages (pagination)
+  const loadMoreMessages = async () => {
+    if (!hasMore || loading) return;
+
+    const viewport = document.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement;
+    if (!viewport) return;
+
+    setLoading(true);
+    prevScrollHeightRef.current = viewport.scrollHeight;
+
+    const nextPage = page + 1;
+
+    try {
+      const res = await communityChatApi.getCommunityMessages(
+        selectedChat.id,
+        nextPage
+      );
+
+      const newMessages = res.data.data.map(mapMessage);
+
+      setMessages((prev) => [...newMessages, ...prev]);
+      setPage(nextPage);
+      setHasMore(res.data.pagination.hasNextPage);
+    } catch (error) {
+      console.error("Error loading messages:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Alternative: IntersectionObserver approach (more reliable)
+  useEffect(() => {
+    if (!topRef.current || !hasMore || loading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        console.log(
+          "IntersectionObserver triggered:",
+          entries[0].isIntersecting
+        );
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          console.log("🚀 LOADING MORE via IntersectionObserver");
+          loadMoreMessages();
+        }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: "100px",
+      }
+    );
+
+    observer.observe(topRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMore, loading, page, selectedChat?.id]);
+
+  // Scroll listener for loading more messages
+  useEffect(() => {
+    // Try multiple methods to find the viewport
+    let viewport = scrollRef.current?.parentElement;
+
+    // If that doesn't work, try the radix selector
+    if (!viewport) {
+      viewport = document.querySelector(
+        "[data-radix-scroll-area-viewport]"
+      ) as HTMLElement;
+    }
+
+    // Last resort: find any scrollable parent
+    if (!viewport && scrollRef.current) {
+      let el = scrollRef.current.parentElement;
+      while (el) {
+        if (el.scrollHeight > el.clientHeight) {
+          viewport = el;
+          break;
+        }
+        el = el.parentElement;
+      }
+    }
+
+    if (!viewport) {
+      console.error("Could not find scrollable viewport");
+      return;
+    }
+
+    console.log("Viewport found:", viewport);
+    console.log("Initial scroll position:", viewport.scrollTop);
+    console.log("Scroll height:", viewport.scrollHeight);
+    console.log("Client height:", viewport.clientHeight);
+
+    const onScroll = () => {
+      const scrollTop = viewport.scrollTop;
+      const scrollHeight = viewport.scrollHeight;
+      const clientHeight = viewport.clientHeight;
+
+      console.log("=== SCROLL EVENT ===");
+      console.log("scrollTop:", scrollTop);
+      console.log("scrollHeight:", scrollHeight);
+      console.log("clientHeight:", clientHeight);
+      console.log("hasMore:", hasMore);
+      console.log("loading:", loading);
+
+      // Load more when scrolled to top
+      if (scrollTop <= 50 && hasMore && !loading) {
+        console.log("🚀 TRIGGERING LOAD MORE");
+        loadMoreMessages();
+      }
+    };
+
+    viewport.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      viewport?.removeEventListener("scroll", onScroll);
+    };
+  }, [hasMore, loading, page, selectedChat?.id]);
+
+  // Restore scroll position after loading more messages
+  useEffect(() => {
+    const viewport = document.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement;
+    if (!viewport || page === 1) return;
+
+    const newScrollHeight = viewport.scrollHeight;
+    viewport.scrollTop = newScrollHeight - prevScrollHeightRef.current;
+  }, [messages, page]);
 
   const filteredCommunities = communities.filter((c) =>
     c.name.toLowerCase().includes(communitySearch.toLowerCase())
@@ -522,6 +680,11 @@ const CommunityChat = () => {
     }
   };
 
+  useEffect(() => {
+    if (page === 1 && messages.length > 0 && lastMessageRef.current) {
+      lastMessageRef.current.scrollIntoView({ behavior: "auto", block: "end" });
+    }
+  }, [messages, page, mesSend]);
   return (
     <>
       <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
@@ -599,7 +762,7 @@ const CommunityChat = () => {
 
         {/* Chat Body */}
         <div className="flex-1 flex flex-col">
-          {selectedChat ? (
+          {selectedChat.id !== "Select" ? (
             <>
               {/* Chat Header */}
               <div className="p-4 border-b flex items-center gap-3">
@@ -649,10 +812,15 @@ const CommunityChat = () => {
 
               {/* Messages */}
               <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4">
-                  {messages.map((msg) => (
+                <div className="space-y-4" ref={scrollRef}>
+                  <div ref={topRef} className="h-1" />
+
+                  {messages.map((msg, index) => (
                     <div
                       key={msg.id}
+                      ref={
+                        index === messages.length - 1 ? lastMessageRef : null
+                      }
                       className={`flex ${
                         msg.isMe ? "justify-end" : "justify-start"
                       }`}
@@ -735,7 +903,6 @@ const CommunityChat = () => {
                 <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                   <SheetTrigger asChild>
                     <Button variant="outline" className="md:hidden mb-4">
-                      <Menu className="mr-2 h-4 w-4" />
                       Open Chats
                     </Button>
                   </SheetTrigger>
