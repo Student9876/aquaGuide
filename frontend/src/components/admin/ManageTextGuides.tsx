@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,7 +29,7 @@ import { useTextGuide } from "@/hooks/useTextGuide";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { textApi } from "@/api/modules/text";
 import { toast } from "sonner";
-import { TextGuide } from "@/api/apiTypes";
+import { TextGuide, TextGuidePayload } from "@/api/apiTypes";
 import { useNavigate } from "react-router-dom";
 import CircularLoader from "../ui/CircularLoader";
 
@@ -53,6 +54,12 @@ const ManageTextGuides = ({ placeholder }) => {
   const textGuidesArray: TextGuide[] = data?.data || [];
   const navigate = useNavigate();
 
+  // Modal state for editing
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editGuideId, setEditGuideId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+
   const handleNavigate = (id: string) => {
     navigate(`/view/text/${id}`);
   };
@@ -67,6 +74,19 @@ const ManageTextGuides = ({ placeholder }) => {
     },
     onError: () => {
       toast.error("Failed to create text guide");
+    },
+  });
+
+  const updateTextGuideMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: TextGuidePayload }) =>
+      textApi.update(id, data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["texts"] });
+      toast.success("Text guide updated successfully");
+      setEditModalOpen(false);
+    },
+    onError: () => {
+      toast.error("Failed to update text guide");
     },
   });
 
@@ -180,6 +200,27 @@ const ManageTextGuides = ({ placeholder }) => {
         Failed to load guides. Please try again later.
       </div>
     );
+  // Open modal and prefill data
+  const handleEditGuide = (guide) => {
+    setEditGuideId(guide.id);
+    setEditTitle(guide.title);
+    setEditContent(guide.content);
+    setEditModalOpen(true);
+  };
+
+  // Save changes (implement mutation as needed)
+  const handleSaveEdit = () => {
+    if (editGuideId && editTitle.trim() && editContent.trim()) {
+      updateTextGuideMutation.mutate({
+        id: editGuideId,
+        data: {
+          title: editTitle,
+          content: editContent,
+        },
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl md:text-3xl font-bold text-foreground">
@@ -321,6 +362,7 @@ const ManageTextGuides = ({ placeholder }) => {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
+                            onClick={() => handleEditGuide(guide)}
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -368,6 +410,34 @@ const ManageTextGuides = ({ placeholder }) => {
           )}
         </CardContent>
       </Card>
+      {/* Edit Guide Modal */}
+      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Guide</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Label htmlFor="edit-guide-title">Guide Title</Label>
+            <Input
+              id="edit-guide-title"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              required
+            />
+            <Label htmlFor="edit-guide-content">Guide Content</Label>
+            <JoditEditor
+              value={editContent}
+              config={config}
+              tabIndex={2}
+              onBlur={(newContent) => setEditContent(newContent)}
+              className="text-black"
+            />
+          </div>
+          <DialogFooter>
+            <Button onClick={handleSaveEdit} className="w-full sm:w-auto">Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
