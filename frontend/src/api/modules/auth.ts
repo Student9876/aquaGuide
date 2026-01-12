@@ -54,6 +54,36 @@ export const authApi = {
     return res.data;
   },
 
+  searchUsersData: async (
+    page: number,
+    query: string,
+    filters?: {
+      role?: string;
+      status?: string;
+      gender?: string;
+      country_code?: string;
+      region?: string;
+    }
+  ): Promise<UserDetailsResponse> => {
+    const queryParams = new URLSearchParams();
+    if (query) queryParams.append('query', query);
+    if (page) queryParams.append('page', page.toString());
+    if (filters) {
+      if (filters.role) queryParams.append('role', filters.role);
+      if (filters.status) queryParams.append('status', filters.status);
+      if (filters.gender) queryParams.append('gender', filters.gender);
+      if (filters.country_code) queryParams.append('country_code', filters.country_code);
+      if (filters.region) queryParams.append('region', filters.region);
+    }
+    const res = await httpClient.get<UserDetailsResponse>(
+      `/api/manage_users/search?${queryParams.toString()}`,
+      {
+        headers: { useAuth: true },
+      }
+    );
+    return res.data;
+  },
+
   deactivateUser: async (userId: string): Promise<string> => {
     const res = await httpClient.post<string>(
       `/api/manage_users/user/${userId}/deactivate`,

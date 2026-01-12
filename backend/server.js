@@ -62,7 +62,7 @@ const startServer = async () => {
   try {
     await sequelize.authenticate();
     console.log("PostgreSQL connected");
-    if (process.env.ENVIRONMENT == "DEV") {
+    if (process.env.ENVIRONMENT == "DE") {
       await sequelize.sync({ alter: true });
       console.log("Models synced");
     }
@@ -78,7 +78,6 @@ const startServer = async () => {
     });
 
     // Setup chat socket handlers
-    setupChatSocket(io);
     setupPerformanceSocket(io);
 
     // Default Socket.IO connection handler (for backward compatibility)
@@ -89,6 +88,8 @@ const startServer = async () => {
         console.log("[Socket.IO] Default disconnect:", socket.id);
       });
     });
+
+    setupChatSocket(io);
 
     server.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);

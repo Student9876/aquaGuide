@@ -4,7 +4,18 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Users, Send, Menu, MessageCircle } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Users,
+  Send,
+  Menu,
+  MessageCircle,
+  SearchCheckIcon,
+  UserPlus,
+  Link,
+  LogIn,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { socket } from "../socket/index";
 
 import { Label } from "recharts";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,7 +32,7 @@ import { toast } from "sonner";
 import { communityChatApi } from "@/api/modules/community_chat";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Description } from "@radix-ui/react-toast";
-import { CommunityMember } from "@/api/apiTypes";
+import { CommunityMember, CommunitySection } from "@/api/apiTypes";
 
 const communities = [
   {
@@ -94,45 +106,6 @@ const recentChats = [
   },
 ];
 
-const mockMessages = [
-  {
-    id: 1,
-    sender: "John Aquarist",
-    content: "Hey! How's your tank doing?",
-    time: "10:30 AM",
-    isMe: false,
-  },
-  {
-    id: 2,
-    sender: "Me",
-    content: "It's doing great! The plants are thriving.",
-    time: "10:32 AM",
-    isMe: true,
-  },
-  {
-    id: 3,
-    sender: "John Aquarist",
-    content: "That's awesome! What fertilizers are you using?",
-    time: "10:33 AM",
-    isMe: false,
-  },
-  {
-    id: 4,
-    sender: "Me",
-    content:
-      "I'm using a liquid CO2 supplement and root tabs for the heavy feeders.",
-    time: "10:35 AM",
-    isMe: true,
-  },
-  {
-    id: 5,
-    sender: "John Aquarist",
-    content: "Thanks for the help!",
-    time: "10:36 AM",
-    isMe: false,
-  },
-];
-
 const SidebarContent = ({
   selectedChat,
   setSelectedChat,
@@ -143,7 +116,9 @@ const SidebarContent = ({
   filteredCommunities,
   filteredUsers,
   onSelectChat,
+
   onCreateCommunity,
+  allCommunity,
   joinedCom,
 }: {
   selectedChat: { id: string; name: string; type: "user" | "community" } | null;
@@ -158,7 +133,9 @@ const SidebarContent = ({
   filteredUsers: typeof recentChats;
   onSelectChat?: () => void;
   onCreateCommunity: () => void;
+
   joinedCom: CommunityMember[];
+  allCommunity: CommunitySection[];
 }) => (
   <div className="flex flex-col h-full overflow-hidden">
     <Tabs
@@ -166,10 +143,17 @@ const SidebarContent = ({
       className="flex flex-col flex-1 h-full overflow-hidden"
     >
       <div className="p-3 border-b flex-shrink-0">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="community" className="flex items-center gap-1.5">
             <Users className="h-4 w-4" />
             Community
+          </TabsTrigger>
+          <TabsTrigger
+            value="joincommunity"
+            className="flex items-center gap-1.5"
+          >
+            <MessageCircle className="h-4 w-4" />
+            All Community
           </TabsTrigger>
           <TabsTrigger value="user" className="flex items-center gap-1.5">
             <MessageCircle className="h-4 w-4" />
@@ -183,7 +167,7 @@ const SidebarContent = ({
         value="community"
         className=" flex flex-col m-0 min-h-0 overflow-hidden "
       >
-        <div className="p-4 border-b">
+        <div className="p-4 border-b flex flex-col gap-2">
           <Button
             variant="ocean"
             className="w-full"
@@ -205,7 +189,7 @@ const SidebarContent = ({
             />
           </div>
 
-          <ScrollArea className="flex-1 mt-3 ">
+          <ScrollArea className="h-[100%] mt-3 ">
             <div className="space-y-1 pr-2 ">
               {joinedCom.map((community) => (
                 <div
@@ -219,7 +203,7 @@ const SidebarContent = ({
                     onSelectChat?.();
                   }}
                   className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                    selectedChat?.id === community.id &&
+                    selectedChat?.id === community.community_id &&
                     selectedChat?.type === "community"
                       ? "bg-primary/10 border border-primary/20"
                       : "hover:bg-accent"
@@ -234,6 +218,72 @@ const SidebarContent = ({
                   <p className="text-xs text-muted-foreground truncate ml-6">
                     {community?.community?.description ||
                       `Welcome to ${community?.community?.name} `}
+                  </p>
+                  <p className="text-xs text-primary/70 ml-6">
+                    {/* {community.online} online */}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
+      </TabsContent>
+
+      {/* joined Community Tab */}
+      <TabsContent
+        value="joincommunity"
+        className=" flex flex-col m-0 min-h-0 overflow-hidden "
+      >
+        <div className="p-4 border-b flex flex-col gap-2">
+          <Button
+            variant="ocean"
+            className="w-full"
+            onClick={onCreateCommunity}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Create Community
+          </Button>
+        </div>
+
+        <div className="p-4  flex flex-col min-h-0 ">
+          <div className="relative flex-shrink-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search community..."
+              value={communitySearch}
+              onChange={(e) => setCommunitySearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
+          <ScrollArea className="h-[100%] mt-3 ">
+            <div className="space-y-1 pr-2 ">
+              {allCommunity.map((community) => (
+                <div
+                  key={community.id}
+                  onClick={() => {
+                    setSelectedChat({
+                      id: community.id,
+                      name: community.name,
+                      type: "community",
+                    });
+                    onSelectChat?.();
+                  }}
+                  className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                    selectedChat?.id === community.id &&
+                    selectedChat?.type === "community"
+                      ? "bg-primary/10 border border-primary/20"
+                      : "hover:bg-accent"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-primary" />
+                    <span className="font-medium text-sm truncate">
+                      {community?.name || "N/A"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate ml-6">
+                    {community?.description || `Welcome to ${community?.name} `}
                   </p>
                   <p className="text-xs text-primary/70 ml-6">
                     {/* {community.online} online */}
@@ -328,8 +378,14 @@ const CommunityChat = () => {
     id: string;
     name: string;
     type: "user" | "community";
-  } | null>({ id: "1", name: "John Aquarist", type: "user" });
+  } | null>({
+    id: "Select",
+    name: "Select Who You Want to chat",
+    type: "user",
+  });
   const [communitySearch, setCommunitySearch] = useState("");
+  const userid = localStorage.getItem("userid");
+  const id = localStorage.getItem("id");
   const [userSearch, setUserSearch] = useState("");
   const [message, setMessage] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -338,6 +394,53 @@ const CommunityChat = () => {
   const [newCommunityDescription, setNewCommunityDescription] = useState("");
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
   const [joinedCom, setJoinedCom] = useState<CommunityMember[]>([]);
+  const [allCommunity, setAllCommunity] = useState<CommunitySection[]>([]);
+  const [communityCreated, setCommunityCreated] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [isMember, setIsMember] = useState<boolean>(false);
+  const [messages, setMessages] = useState([]);
+
+  const mapMessage = (msg: any) => ({
+    id: msg.id,
+    isMe: msg.sender?.id === id,
+    sender: msg.sender?.name || "Unknown",
+    content: msg.message,
+    time: new Date(msg.created_at).toLocaleTimeString(),
+  });
+
+  useEffect(() => {
+    socket.emit("join-community", selectedChat.id);
+  }, [selectedChat.id]);
+
+  /**
+   * Realtime listener (ONLY ONCE)
+   */
+  useEffect(() => {
+    const handler = (msg) => {
+      setMessages((prev) => [...prev, mapMessage(msg)]);
+      console.log("send message", mapMessage(msg));
+    };
+
+    socket.on("message-received", handler);
+
+    return () => {
+      socket.off("message-received", handler);
+    };
+  }, []);
+
+  const sendMessage = () => {
+    socket.emit(
+      "send-message",
+      {
+        communityId: selectedChat.id,
+        message: message,
+      },
+      (response) => {
+        console.log(response);
+        setMessage("");
+      }
+    );
+  };
 
   const filteredCommunities = communities.filter((c) =>
     c.name.toLowerCase().includes(communitySearch.toLowerCase())
@@ -350,34 +453,61 @@ const CommunityChat = () => {
   useEffect(() => {
     const getJoinCommunity = async () => {
       try {
+        if (!userid) {
+          return;
+        }
         const res = await communityChatApi.getJoinedCommunity();
         setJoinedCom(res?.data?.data || []);
         console.log(res?.data?.data);
       } catch (error) {}
     };
     getJoinCommunity();
-  }, []);
+  }, [communityCreated]);
 
-  const sidebarProps = {
-    selectedChat,
-    setSelectedChat,
-    communitySearch,
-    setCommunitySearch,
-    userSearch,
-    setUserSearch,
-    filteredCommunities,
-    filteredUsers,
-    onCreateCommunity: () => setCreateModalOpen(true),
-    joinedCom,
+  useEffect(() => {
+    const handleAllPublicCommunity = async () => {
+      try {
+        const res = await communityChatApi.getAllPublicCommunity();
+        setAllCommunity(res?.data?.data);
+        console.log(res?.data?.data);
+      } catch (error) {}
+    };
+    handleAllPublicCommunity();
+  }, [communityCreated]);
+
+  const handleJoinCommunity = async () => {
+    try {
+      const res = await communityChatApi.joinCommunity(selectedChat.id);
+
+      setCommunityCreated((prev) => !prev);
+    } catch (error) {}
   };
 
-  const handleCreateCommunity = () => {
+  useEffect(() => {
+    const checkMember = async () => {
+      setLoading(true);
+      try {
+        if (!userid) {
+          return;
+        }
+        const res = await communityChatApi.checkMember(selectedChat.id);
+        setIsMember(res?.data?.member || false);
+      } catch (error) {
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkMember();
+  }, [selectedChat, communityCreated]);
+
+  const handleCreateCommunity = async () => {
     // TODO: Implement actual community creation
     if (!newCommunityDescription.trim() || !newCommunityName.trim()) {
       toast.error("Please give description and title");
     }
     try {
-      const res = communityChatApi.create({
+      const res = await communityChatApi.create({
         name: newCommunityName,
         description: newCommunityDescription,
         is_private: isPrivate,
@@ -386,6 +516,7 @@ const CommunityChat = () => {
       setNewCommunityName("");
       setNewCommunityDescription("");
       setCreateModalOpen(false);
+      setCommunityCreated((prev) => !prev);
     } catch (error) {
       toast.error("Something went wrong creating the community");
     }
@@ -450,8 +581,20 @@ const CommunityChat = () => {
       </Dialog>
       <div className="flex h-[calc(100vh-130px)] min-h-[500px] border rounded-lg overflow-hidden bg-card">
         {/* Desktop Sidebar */}
-        <div className="hidden md:flex w-80 border-r flex-col bg-muted/30">
-          <SidebarContent {...sidebarProps} />
+        <div className="hidden md:flex w-[400px] border-r flex-col bg-muted/30">
+          <SidebarContent
+            selectedChat={selectedChat}
+            setSelectedChat={setSelectedChat}
+            communitySearch={communitySearch}
+            setCommunitySearch={setCommunitySearch}
+            userSearch={userSearch}
+            setUserSearch={setUserSearch}
+            filteredCommunities={filteredCommunities}
+            filteredUsers={filteredUsers}
+            joinedCom={joinedCom}
+            allCommunity={allCommunity}
+            onCreateCommunity={() => setCreateModalOpen(true)}
+          />
         </div>
 
         {/* Chat Body */}
@@ -469,7 +612,17 @@ const CommunityChat = () => {
                   </SheetTrigger>
                   <SheetContent side="left" className="w-80 p-0">
                     <SidebarContent
-                      {...sidebarProps}
+                      selectedChat={selectedChat}
+                      setSelectedChat={setSelectedChat}
+                      communitySearch={communitySearch}
+                      setCommunitySearch={setCommunitySearch}
+                      userSearch={userSearch}
+                      setUserSearch={setUserSearch}
+                      filteredCommunities={filteredCommunities}
+                      filteredUsers={filteredUsers}
+                      joinedCom={joinedCom}
+                      onCreateCommunity={() => setCreateModalOpen(true)}
+                      allCommunity={allCommunity}
                       onSelectChat={() => setSheetOpen(false)}
                     />
                   </SheetContent>
@@ -497,7 +650,7 @@ const CommunityChat = () => {
               {/* Messages */}
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">
-                  {mockMessages.map((msg) => (
+                  {messages.map((msg) => (
                     <div
                       key={msg.id}
                       className={`flex ${
@@ -533,24 +686,47 @@ const CommunityChat = () => {
               </ScrollArea>
 
               {/* Message Input */}
-              <div className="p-4 border-t">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Type a message..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="flex-1"
-                    onKeyPress={(e) => e.key === "Enter" && setMessage("")}
-                  />
-                  <Button
-                    variant="ocean"
-                    size="icon"
-                    onClick={() => setMessage("")}
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
+
+              {!userid && (
+                <div className="p-4 border-t">
+                  <div className="flex flex-col items-center justify-center gap-3 py-4">
+                    <p className="text-muted-foreground text-sm">
+                      Please login or register to participate
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {!loading && !isMember && userid && (
+                <div className="p-4 border-t">
+                  <div className="flex flex-col items-center justify-center gap-3 py-4">
+                    <p className="text-muted-foreground text-sm">
+                      You haven't joined this community
+                    </p>
+                    <Button variant="ocean" onClick={handleJoinCommunity}>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Join Community
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {!loading && isMember && userid && (
+                <div className="p-4 border-t">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Type a message..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      className="flex-1"
+                      onKeyPress={(e) => e.key === "Enter" && setMessage("")}
+                    />
+                    <Button variant="ocean" size="icon" onClick={sendMessage}>
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-muted-foreground">
@@ -565,7 +741,17 @@ const CommunityChat = () => {
                   </SheetTrigger>
                   <SheetContent side="left" className="w-80 p-0">
                     <SidebarContent
-                      {...sidebarProps}
+                      selectedChat={selectedChat}
+                      setSelectedChat={setSelectedChat}
+                      communitySearch={communitySearch}
+                      setCommunitySearch={setCommunitySearch}
+                      userSearch={userSearch}
+                      setUserSearch={setUserSearch}
+                      filteredCommunities={filteredCommunities}
+                      filteredUsers={filteredUsers}
+                      joinedCom={joinedCom}
+                      onCreateCommunity={() => setCreateModalOpen(true)}
+                      allCommunity={allCommunity}
                       onSelectChat={() => setSheetOpen(false)}
                     />
                   </SheetContent>

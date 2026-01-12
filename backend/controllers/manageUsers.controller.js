@@ -302,55 +302,59 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-export const searchUser = async (req, res, next) => {
+export const searchUser = async (req, res) => {
   try {
-    const { userName } = req.query;
-    const currentUserId = req.user.id;
+    const { query, filter = {}, page = 1, pageSize = 3 } = req.query;
 
-    const page = parseInt(req.query.page) || 1;
-    const per_page = parseInt(req.query.limit) || 20;
-    const offset = (page - 1) * per_page;
+    const currentUserId = req.user?.id;
 
-    if (!userName || !userName.trim()) {
+    if (!query || !query.trim()) {
       return res.status(400).json({
         message: "Search query is required",
       });
     }
 
-    const searchValue = `%${userName.toLowerCase()}%`;
+    const offset = (page - 1) * pageSize;
 
-    const { count, rows } = await User.findAndCountAll({
-      where: {
-        [Op.and]: [
-          {
-            [Op.or]: [
-              where(fn("LOWER", col("userid")), {
-                [Op.like]: searchValue,
-              }),
-            ],
-          },
-          {
-            id: { [Op.ne]: currentUserId },
-          },
-        ],
-      },
-      attributes: ["id", "userid", "email", "role", "createdAt"],
-      limit: per_page,
-      offset,
+    const where = {
+      [Op.and]: [
+        {
+          [Op.or]: [
+            { userid: { [Op.iLike]: `%${query}%` } },
+            { name: { [Op.iLike]: `%${query}%` } },
+            { email: { [Op.iLike]: `%${query}%` } },
+          ],
+        },
+      ],
+    };
+
+    if (currentUserId) {
+      where[Op.and].push({ id: { [Op.ne]: currentUserId } });
+    }
+
+    if (filter.role) where.role = filter.role;
+    if (filter.status) where.status = filter.status;
+    if (filter.gender) where.gender = filter.gender;
+    if (filter.country_code) where.country_code = filter.country_code;
+    if (filter.region) where.region = filter.region;
+
+    const { rows: users, count: total } = await User.findAndCountAll({
+      where,
+      attributes: { exclude: ["password"] },
       order: [["createdAt", "DESC"]],
+      limit: pageSize,
+      offset,
     });
 
     res.status(200).json({
-      data: rows,
-      pagination: {
-        total_items: count,
-        current_page: page,
-        totalPages: Math.ceil(count / per_page),
-        pageSize: per_page,
-      },
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+      users,
     });
   } catch (error) {
-    console.error("User search error:", error);
-    next(error);
+    console.error(error.message);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
