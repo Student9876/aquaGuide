@@ -33,6 +33,7 @@ import { communityChatApi } from "@/api/modules/community_chat";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Description } from "@radix-ui/react-toast";
 import { CommunityMember, CommunitySection } from "@/api/apiTypes";
+import CircularLoader from "@/components/ui/CircularLoader";
 
 const communities = [
   {
@@ -406,6 +407,7 @@ const CommunityChat = () => {
   const [mesSend, setMesSend] = useState<boolean>(false);
   const topRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
+  const [memberLoading, setMemeberLoading] = useState<boolean>(false);
 
   const mapMessage = (msg: any) => ({
     id: msg.id,
@@ -415,8 +417,124 @@ const CommunityChat = () => {
     time: new Date(msg.created_at).toLocaleTimeString(),
   });
 
+  //handle community join , check member or not , and create community
+  const handleJoinCommunity = async () => {
+    try {
+      const res = await communityChatApi.joinCommunity(selectedChat.id);
+
+      setCommunityCreated((prev) => !prev);
+    } catch (error) {}
+  };
+
   useEffect(() => {
-    if (!selectedChat?.id) return;
+    if (selectedChat?.id === "Select") return;
+    const checkMember = async () => {
+      setMemeberLoading(true);
+      try {
+        if (!userid) {
+          return;
+        }
+        const res = await communityChatApi.checkMember(selectedChat.id);
+        setIsMember(res?.data?.member || false);
+      } catch (error) {
+      } finally {
+        setMemeberLoading(false);
+      }
+    };
+
+    checkMember();
+  }, [selectedChat, communityCreated]);
+
+  const handleCreateCommunity = async () => {
+    // TODO: Implement actual community creation
+    if (!newCommunityDescription.trim() || !newCommunityName.trim()) {
+      toast.error("Please give description and title");
+    }
+    try {
+      const res = await communityChatApi.create({
+        name: newCommunityName,
+        description: newCommunityDescription,
+        is_private: isPrivate,
+      });
+      toast.success("Community created successfully");
+      setNewCommunityName("");
+      setNewCommunityDescription("");
+      setCreateModalOpen(false);
+      setCommunityCreated((prev) => !prev);
+    } catch (error) {
+      toast.error("Something went wrong creating the community");
+    }
+  };
+
+  //join community and get public community
+  useEffect(() => {
+    const getJoinCommunity = async () => {
+      try {
+        if (!userid) {
+          return;
+        }
+        const res = await communityChatApi.getJoinedCommunity();
+        setJoinedCom(res?.data?.data || []);
+        console.log(res?.data?.data);
+      } catch (error) {}
+    };
+    getJoinCommunity();
+  }, [communityCreated]);
+
+  useEffect(() => {
+    const handleAllPublicCommunity = async () => {
+      try {
+        const res = await communityChatApi.getAllPublicCommunity();
+        setAllCommunity(res?.data?.data);
+        console.log(res?.data?.data);
+      } catch (error) {}
+    };
+    handleAllPublicCommunity();
+  }, [communityCreated]);
+
+  //socket connections for realtime chat
+
+  //socket to join community so users can chat in a same room
+  useEffect(() => {
+    if (selectedChat.type === "user") return;
+    socket.emit("join-community", selectedChat.id);
+  }, [selectedChat.id]);
+
+  /**
+   * Realtime listener (ONLY ONCE) to listen for incoming message
+   */
+  useEffect(() => {
+    const handler = (msg: any) => {
+      setMessages((prev) => [...prev, mapMessage(msg)]);
+      console.log("send message", mapMessage(msg));
+    };
+
+    socket.on("message-received", handler);
+
+    return () => {
+      socket.off("message-received", handler);
+    };
+  }, []);
+
+  // to send message in realtime
+  const sendMessage = () => {
+    socket.emit(
+      "send-message",
+      {
+        communityId: selectedChat.id,
+        message: message,
+      },
+      (response) => {
+        console.log(response);
+        setMessage("");
+      }
+    );
+    setMesSend((prev) => !prev);
+  };
+
+  //get initial messages when page reloaded fetch from db
+  useEffect(() => {
+    if (!selectedChat?.id || selectedChat.id === "Select") return;
     const loadMessages = async () => {
       setMessages([]); // clear previous chat
       setPage(1);
@@ -433,41 +551,6 @@ const CommunityChat = () => {
 
     loadMessages();
   }, [selectedChat]);
-
-  useEffect(() => {
-    socket.emit("join-community", selectedChat.id);
-  }, [selectedChat.id]);
-
-  /**
-   * Realtime listener (ONLY ONCE)
-   */
-  useEffect(() => {
-    const handler = (msg: any) => {
-      setMessages((prev) => [...prev, mapMessage(msg)]);
-      console.log("send message", mapMessage(msg));
-    };
-
-    socket.on("message-received", handler);
-
-    return () => {
-      socket.off("message-received", handler);
-    };
-  }, []);
-
-  const sendMessage = () => {
-    socket.emit(
-      "send-message",
-      {
-        communityId: selectedChat.id,
-        message: message,
-      },
-      (response) => {
-        console.log(response);
-        setMessage("");
-      }
-    );
-    setMesSend((prev) => !prev);
-  };
 
   // Load more messages (pagination)
   const loadMoreMessages = async () => {
@@ -501,7 +584,7 @@ const CommunityChat = () => {
     }
   };
 
-  // Alternative: IntersectionObserver approach (more reliable)
+  // IntersectionObserver approach to load message when we are in top
   useEffect(() => {
     if (!topRef.current || !hasMore || loading) return;
 
@@ -529,66 +612,6 @@ const CommunityChat = () => {
     };
   }, [hasMore, loading, page, selectedChat?.id]);
 
-  // Scroll listener for loading more messages
-  useEffect(() => {
-    // Try multiple methods to find the viewport
-    let viewport = scrollRef.current?.parentElement;
-
-    // If that doesn't work, try the radix selector
-    if (!viewport) {
-      viewport = document.querySelector(
-        "[data-radix-scroll-area-viewport]"
-      ) as HTMLElement;
-    }
-
-    // Last resort: find any scrollable parent
-    if (!viewport && scrollRef.current) {
-      let el = scrollRef.current.parentElement;
-      while (el) {
-        if (el.scrollHeight > el.clientHeight) {
-          viewport = el;
-          break;
-        }
-        el = el.parentElement;
-      }
-    }
-
-    if (!viewport) {
-      console.error("Could not find scrollable viewport");
-      return;
-    }
-
-    console.log("Viewport found:", viewport);
-    console.log("Initial scroll position:", viewport.scrollTop);
-    console.log("Scroll height:", viewport.scrollHeight);
-    console.log("Client height:", viewport.clientHeight);
-
-    const onScroll = () => {
-      const scrollTop = viewport.scrollTop;
-      const scrollHeight = viewport.scrollHeight;
-      const clientHeight = viewport.clientHeight;
-
-      console.log("=== SCROLL EVENT ===");
-      console.log("scrollTop:", scrollTop);
-      console.log("scrollHeight:", scrollHeight);
-      console.log("clientHeight:", clientHeight);
-      console.log("hasMore:", hasMore);
-      console.log("loading:", loading);
-
-      // Load more when scrolled to top
-      if (scrollTop <= 50 && hasMore && !loading) {
-        console.log("🚀 TRIGGERING LOAD MORE");
-        loadMoreMessages();
-      }
-    };
-
-    viewport.addEventListener("scroll", onScroll, { passive: true });
-
-    return () => {
-      viewport?.removeEventListener("scroll", onScroll);
-    };
-  }, [hasMore, loading, page, selectedChat?.id]);
-
   // Restore scroll position after loading more messages
   useEffect(() => {
     const viewport = document.querySelector(
@@ -607,78 +630,6 @@ const CommunityChat = () => {
   const filteredUsers = recentChats.filter((u) =>
     u.name.toLowerCase().includes(userSearch.toLowerCase())
   );
-
-  useEffect(() => {
-    const getJoinCommunity = async () => {
-      try {
-        if (!userid) {
-          return;
-        }
-        const res = await communityChatApi.getJoinedCommunity();
-        setJoinedCom(res?.data?.data || []);
-        console.log(res?.data?.data);
-      } catch (error) {}
-    };
-    getJoinCommunity();
-  }, [communityCreated]);
-
-  useEffect(() => {
-    const handleAllPublicCommunity = async () => {
-      try {
-        const res = await communityChatApi.getAllPublicCommunity();
-        setAllCommunity(res?.data?.data);
-        console.log(res?.data?.data);
-      } catch (error) {}
-    };
-    handleAllPublicCommunity();
-  }, [communityCreated]);
-
-  const handleJoinCommunity = async () => {
-    try {
-      const res = await communityChatApi.joinCommunity(selectedChat.id);
-
-      setCommunityCreated((prev) => !prev);
-    } catch (error) {}
-  };
-
-  useEffect(() => {
-    const checkMember = async () => {
-      setLoading(true);
-      try {
-        if (!userid) {
-          return;
-        }
-        const res = await communityChatApi.checkMember(selectedChat.id);
-        setIsMember(res?.data?.member || false);
-      } catch (error) {
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkMember();
-  }, [selectedChat, communityCreated]);
-
-  const handleCreateCommunity = async () => {
-    // TODO: Implement actual community creation
-    if (!newCommunityDescription.trim() || !newCommunityName.trim()) {
-      toast.error("Please give description and title");
-    }
-    try {
-      const res = await communityChatApi.create({
-        name: newCommunityName,
-        description: newCommunityDescription,
-        is_private: isPrivate,
-      });
-      toast.success("Community created successfully");
-      setNewCommunityName("");
-      setNewCommunityDescription("");
-      setCreateModalOpen(false);
-      setCommunityCreated((prev) => !prev);
-    } catch (error) {
-      toast.error("Something went wrong creating the community");
-    }
-  };
 
   useEffect(() => {
     if (page === 1 && messages.length > 0 && lastMessageRef.current) {
@@ -761,174 +712,182 @@ const CommunityChat = () => {
         </div>
 
         {/* Chat Body */}
-        <div className="flex-1 flex flex-col">
-          {selectedChat.id !== "Select" ? (
-            <>
-              {/* Chat Header */}
-              <div className="p-4 border-b flex items-center gap-3">
-                {/* Mobile Menu Button */}
-                <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" className="md:hidden">
-                      <Menu className="h-5 w-5" />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="left" className="w-80 p-0">
-                    <SidebarContent
-                      selectedChat={selectedChat}
-                      setSelectedChat={setSelectedChat}
-                      communitySearch={communitySearch}
-                      setCommunitySearch={setCommunitySearch}
-                      userSearch={userSearch}
-                      setUserSearch={setUserSearch}
-                      filteredCommunities={filteredCommunities}
-                      filteredUsers={filteredUsers}
-                      joinedCom={joinedCom}
-                      onCreateCommunity={() => setCreateModalOpen(true)}
-                      allCommunity={allCommunity}
-                      onSelectChat={() => setSheetOpen(false)}
-                    />
-                  </SheetContent>
-                </Sheet>
 
-                <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  {selectedChat.type === "community" ? (
-                    <Users className="h-5 w-5 text-primary" />
-                  ) : (
-                    <span className="font-medium">
-                      {selectedChat.name.charAt(0)}
-                    </span>
-                  )}
+        {memberLoading ? (
+          <div className="flex-1 flex flex-col">
+            {" "}
+            <CircularLoader />{" "}
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-col">
+            {selectedChat.id !== "Select" ? (
+              <>
+                {/* Chat Header */}
+                <div className="p-4 border-b flex items-center gap-3">
+                  {/* Mobile Menu Button */}
+                  <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon" className="md:hidden">
+                        <Menu className="h-5 w-5" />
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="w-80 p-0">
+                      <SidebarContent
+                        selectedChat={selectedChat}
+                        setSelectedChat={setSelectedChat}
+                        communitySearch={communitySearch}
+                        setCommunitySearch={setCommunitySearch}
+                        userSearch={userSearch}
+                        setUserSearch={setUserSearch}
+                        filteredCommunities={filteredCommunities}
+                        filteredUsers={filteredUsers}
+                        joinedCom={joinedCom}
+                        onCreateCommunity={() => setCreateModalOpen(true)}
+                        allCommunity={allCommunity}
+                        onSelectChat={() => setSheetOpen(false)}
+                      />
+                    </SheetContent>
+                  </Sheet>
+
+                  <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                    {selectedChat.type === "community" ? (
+                      <Users className="h-5 w-5 text-primary" />
+                    ) : (
+                      <span className="font-medium">
+                        {selectedChat.name.charAt(0)}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">{selectedChat.name}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedChat.type === "community"
+                        ? "Community chat"
+                        : "Online"}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold">{selectedChat.name}</h3>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedChat.type === "community"
-                      ? "Community chat"
-                      : "Online"}
-                  </p>
-                </div>
-              </div>
 
-              {/* Messages */}
-              <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4" ref={scrollRef}>
-                  <div ref={topRef} className="h-1" />
+                {/* Messages */}
+                <ScrollArea className="flex-1 p-4">
+                  <div className="space-y-4" ref={scrollRef}>
+                    <div ref={topRef} className="h-1" />
 
-                  {messages.map((msg, index) => (
-                    <div
-                      key={msg.id}
-                      ref={
-                        index === messages.length - 1 ? lastMessageRef : null
-                      }
-                      className={`flex ${
-                        msg.isMe ? "justify-end" : "justify-start"
-                      }`}
-                    >
+                    {messages.map((msg, index) => (
                       <div
-                        className={`max-w-[70%] rounded-lg p-3 ${
-                          msg.isMe
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted"
+                        key={msg.id}
+                        ref={
+                          index === messages.length - 1 ? lastMessageRef : null
+                        }
+                        className={`flex ${
+                          msg.isMe ? "justify-end" : "justify-start"
                         }`}
                       >
-                        {!msg.isMe && (
-                          <p className="text-xs font-medium mb-1 text-primary">
-                            {msg.sender}
-                          </p>
-                        )}
-                        <p className="text-sm">{msg.content}</p>
-                        <p
-                          className={`text-xs mt-1 ${
+                        <div
+                          className={`max-w-[70%] rounded-lg p-3 ${
                             msg.isMe
-                              ? "text-primary-foreground/70"
-                              : "text-muted-foreground"
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted"
                           }`}
                         >
-                          {msg.time}
-                        </p>
+                          {!msg.isMe && (
+                            <p className="text-xs font-medium mb-1 text-primary">
+                              {msg.sender}
+                            </p>
+                          )}
+                          <p className="text-sm">{msg.content}</p>
+                          <p
+                            className={`text-xs mt-1 ${
+                              msg.isMe
+                                ? "text-primary-foreground/70"
+                                : "text-muted-foreground"
+                            }`}
+                          >
+                            {msg.time}
+                          </p>
+                        </div>
                       </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+
+                {/* Message Input */}
+
+                {!userid && (
+                  <div className="p-4 border-t">
+                    <div className="flex flex-col items-center justify-center gap-3 py-4">
+                      <p className="text-muted-foreground text-sm">
+                        Please login or register to participate
+                      </p>
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
-
-              {/* Message Input */}
-
-              {!userid && (
-                <div className="p-4 border-t">
-                  <div className="flex flex-col items-center justify-center gap-3 py-4">
-                    <p className="text-muted-foreground text-sm">
-                      Please login or register to participate
-                    </p>
                   </div>
-                </div>
-              )}
+                )}
 
-              {!loading && !isMember && userid && (
-                <div className="p-4 border-t">
-                  <div className="flex flex-col items-center justify-center gap-3 py-4">
-                    <p className="text-muted-foreground text-sm">
-                      You haven't joined this community
-                    </p>
-                    <Button variant="ocean" onClick={handleJoinCommunity}>
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      Join Community
-                    </Button>
+                {!memberLoading && !isMember && userid && (
+                  <div className="p-4 border-t">
+                    <div className="flex flex-col items-center justify-center gap-3 py-4">
+                      <p className="text-muted-foreground text-sm">
+                        You haven't joined this community
+                      </p>
+                      <Button variant="ocean" onClick={handleJoinCommunity}>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Join Community
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {!loading && isMember && userid && (
-                <div className="p-4 border-t">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Type a message..."
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      className="flex-1"
-                      onKeyPress={(e) => e.key === "Enter" && setMessage("")}
-                    />
-                    <Button variant="ocean" size="icon" onClick={sendMessage}>
-                      <Send className="h-4 w-4" />
-                    </Button>
+                {!memberLoading && isMember && userid && (
+                  <div className="p-4 border-t">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Type a message..."
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        className="flex-1"
+                        onKeyPress={(e) => e.key === "Enter" && setMessage("")}
+                      />
+                      <Button variant="ocean" size="icon" onClick={sendMessage}>
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
+                )}
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                <div className="text-center">
+                  {/* Mobile Menu Button when no chat selected */}
+                  <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+                    <SheetTrigger asChild>
+                      <Button variant="outline" className="md:hidden mb-4">
+                        Open Chats
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="w-80 p-0">
+                      <SidebarContent
+                        selectedChat={selectedChat}
+                        setSelectedChat={setSelectedChat}
+                        communitySearch={communitySearch}
+                        setCommunitySearch={setCommunitySearch}
+                        userSearch={userSearch}
+                        setUserSearch={setUserSearch}
+                        filteredCommunities={filteredCommunities}
+                        filteredUsers={filteredUsers}
+                        joinedCom={joinedCom}
+                        onCreateCommunity={() => setCreateModalOpen(true)}
+                        allCommunity={allCommunity}
+                        onSelectChat={() => setSheetOpen(false)}
+                      />
+                    </SheetContent>
+                  </Sheet>
+                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Select a chat to start messaging</p>
                 </div>
-              )}
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground">
-              <div className="text-center">
-                {/* Mobile Menu Button when no chat selected */}
-                <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                  <SheetTrigger asChild>
-                    <Button variant="outline" className="md:hidden mb-4">
-                      Open Chats
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="left" className="w-80 p-0">
-                    <SidebarContent
-                      selectedChat={selectedChat}
-                      setSelectedChat={setSelectedChat}
-                      communitySearch={communitySearch}
-                      setCommunitySearch={setCommunitySearch}
-                      userSearch={userSearch}
-                      setUserSearch={setUserSearch}
-                      filteredCommunities={filteredCommunities}
-                      filteredUsers={filteredUsers}
-                      joinedCom={joinedCom}
-                      onCreateCommunity={() => setCreateModalOpen(true)}
-                      allCommunity={allCommunity}
-                      onSelectChat={() => setSheetOpen(false)}
-                    />
-                  </SheetContent>
-                </Sheet>
-                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Select a chat to start messaging</p>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </>
   );
