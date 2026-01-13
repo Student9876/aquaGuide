@@ -2,17 +2,17 @@ import httpClient from "../axiosSetup";
 
 export const performanceApi = {
   metrices: () =>
-    httpClient.post<any>("/api/performance/metrics", {
+    httpClient.get<any>("/api/performance/metrics", {
       headers: { useAuth: true },
     }),
 
   history: () =>
-    httpClient.post<any>("/api/performance/history", {
+    httpClient.get<any>("/api/performance/history", {
       headers: { useAuth: true },
     }),
 
   summary: () =>
-    httpClient.post<any>("/api/performance/summary", {
+    httpClient.get<any>("/api/performance/summary", {
       headers: { useAuth: true },
     }),
 };

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 export const useMetrices = () => {
   return useQuery({
     queryKey: ["metrice"],
-    queryFn: () => performanceApi.metrices(),
+    queryFn: performanceApi.metrices,
     staleTime: 1 * 60 * 1000,
     gcTime: 1 * 60 * 1000,
   });
@@ -13,7 +13,7 @@ export const useMetrices = () => {
 export const useHistory = () => {
   return useQuery({
     queryKey: ["history"],
-    queryFn: () => performanceApi.history(),
+    queryFn: performanceApi.history,
     staleTime: 1 * 60 * 1000,
     gcTime: 1 * 60 * 1000,
   });
@@ -22,7 +22,7 @@ export const useHistory = () => {
 export const useSummary = () => {
   return useQuery({
     queryKey: ["summary"],
-    queryFn: () => performanceApi.summary(),
+    queryFn: performanceApi.summary,
     staleTime: 1 * 60 * 1000,
     gcTime: 1 * 60 * 1000,
   });
