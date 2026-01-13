@@ -8,6 +8,12 @@ import {
 } from "../apiTypes";
 
 export const textApi = {
+    update: async (id: string, data: TextGuidePayload): Promise<any> => {
+      const res = await httpClient.put(`/api/textguides/text_guide/${id}`, data, {
+        headers: { useAuth: true },
+      });
+      return res.data;
+    },
   create: async (data: TextGuidePayload): Promise<any> => {
     const res = await httpClient.post("/api/textguides/text_guide", data, {
       headers: { useAuth: true },
