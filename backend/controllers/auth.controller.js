@@ -174,22 +174,24 @@ export const login = async (req, res) => {
       where: { ip_address: ipAddress },
     });
 
-    // Update user with latest IP + location
-    await User.update(
-      {
-        ip_address: ipAddress,
-        country_code: location?.country_code ?? null,
-        region: location?.region ?? null,
-        latitude: location?.latitude ?? null,
-        longitude: location?.longitude ?? null,
-        last_seen: new Date(),
-      },
-      { where: { id: user.id } }
-    );
+    if (ipAddress != "::1") {
+      // Update user with latest IP + location
+      await User.update(
+        {
+          ip_address: ipAddress,
+          country_code: location?.country_code ?? null,
+          region: location?.region ?? null,
+          latitude: location?.latitude ?? null,
+          longitude: location?.longitude ?? null,
+          last_seen: new Date(),
+        },
+        { where: { id: user.id } }
+      );
 
-    // 🧹 Remove guest after successful login
-    if (guest) {
-      await guest.destroy();
+      // 🧹 Remove guest after successful login
+      if (guest) {
+        await guest.destroy();
+      }
     }
 
     /* ---------------- TOKENS ---------------- */
@@ -219,7 +221,6 @@ export const login = async (req, res) => {
     });
   }
 };
-
 
 // --------------------
 // LOGOUT

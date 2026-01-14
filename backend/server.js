@@ -15,10 +15,12 @@ import manageUserRoutes from "./routes/admin.manageuser.route.js";
 import speciesRoutes from "./routes/species.route.js";
 import speciesPublicRoutes from "./routes/species.public.route.js";
 import textGuideRoutes from "./routes/text_guide.route.js";
+import privateChatRoutes from "./routes/privateconversation.route.js";
 import { setupChatSocket } from "./lib/socket-handlers.js";
 import faqRoutes from "./routes/faq.route.js";
 import performanceRoutes from "./routes/performance.route.js";
 import { setupPerformanceSocket } from "./lib/performance.socket.js";
+import { setupPrivateChat } from "./lib/socket-handlers-private.js";
 
 dotenv.config();
 
@@ -49,6 +51,7 @@ app.use("/api/community/chat", communityChatsRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api/faqs", faqRoutes);
 app.use("/api/performance", performanceRoutes);
+app.use("/api/conversation/private", privateChatRoutes);
 
 app.get("/", (req, res) => {
   res.send(
@@ -90,6 +93,7 @@ const startServer = async () => {
     });
 
     setupChatSocket(io);
+    setupPrivateChat(io);
 
     server.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);

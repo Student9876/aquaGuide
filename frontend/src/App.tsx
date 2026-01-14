@@ -54,7 +54,7 @@ const App = () => {
     const getRoles = async () => {
       try {
         const res = await authApi.getRole(userid);
-        console.log(res?.data?.role || "user");
+        // console.log(res?.data?.role || "user");
         dispatch(setRole(res?.data?.role || "user"));
       } catch (error) {
         return "user";
