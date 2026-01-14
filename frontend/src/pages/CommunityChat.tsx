@@ -32,29 +32,9 @@ import { toast } from "sonner";
 import { communityChatApi } from "@/api/modules/community_chat";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Description } from "@radix-ui/react-toast";
-import { CommunityMember, CommunitySection } from "@/api/apiTypes";
+import { CommunityMember, CommunitySection, User } from "@/api/apiTypes";
 import CircularLoader from "@/components/ui/CircularLoader";
-
-const communities = [
-  {
-    id: 1,
-    name: "Beginner's Corner",
-    lastMessage: "Welcome to the group!",
-    online: 89,
-  },
-  {
-    id: 2,
-    name: "Planted Tank Enthusiasts",
-    lastMessage: "Check out this aquascape",
-    online: 45,
-  },
-  {
-    id: 3,
-    name: "Saltwater Specialists",
-    lastMessage: "Any tips for coral care?",
-    online: 32,
-  },
-];
+import { useUsers } from "@/hooks/useUsers";
 
 const recentChats = [
   {
@@ -114,13 +94,14 @@ const SidebarContent = ({
   setCommunitySearch,
   userSearch,
   setUserSearch,
-  filteredCommunities,
+
   filteredUsers,
   onSelectChat,
 
   onCreateCommunity,
   allCommunity,
   joinedCom,
+  userArray,
 }: {
   selectedChat: { id: string; name: string; type: "user" | "community" } | null;
   setSelectedChat: (
@@ -130,13 +111,14 @@ const SidebarContent = ({
   setCommunitySearch: (value: string) => void;
   userSearch: string;
   setUserSearch: (value: string) => void;
-  filteredCommunities: typeof communities;
+
   filteredUsers: typeof recentChats;
   onSelectChat?: () => void;
   onCreateCommunity: () => void;
 
   joinedCom: CommunityMember[];
   allCommunity: CommunitySection[];
+  userArray: User[];
 }) => (
   <div className="flex flex-col h-full overflow-hidden">
     <Tabs
@@ -314,7 +296,7 @@ const SidebarContent = ({
 
           <ScrollArea className="flex-1 mt-3">
             <div className="space-y-1 pr-2">
-              {filteredUsers.map((chat) => (
+              {userArray.map((chat) => (
                 <div
                   key={chat.id}
                   onClick={() => {
@@ -340,28 +322,28 @@ const SidebarContent = ({
                             {chat.name.charAt(0)}
                           </span>
                         </div>
-                        {chat.online && (
+                        {/* {chat.online && (
                           <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-background" />
-                        )}
+                        )} */}
                       </div>
                       <div className="flex-1 min-w-0">
                         <span className="font-medium text-sm block truncate">
                           {chat.name}
                         </span>
                         <p className="text-xs text-muted-foreground truncate">
-                          {chat.lastMessage}
+                          @{chat.userid}
                         </p>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1 flex-shrink-0">
                       <span className="text-xs text-muted-foreground">
-                        {chat.time}
+                        {/* {chat.time} */}
                       </span>
-                      {chat.unread > 0 && (
+                      {/* {chat.unread > 0 && (
                         <span className="bg-primary text-primary-foreground text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
                           {chat.unread}
                         </span>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 </div>
@@ -385,6 +367,7 @@ const CommunityChat = () => {
     type: "user",
   });
   const [communitySearch, setCommunitySearch] = useState("");
+
   const userid = localStorage.getItem("userid");
   const id = localStorage.getItem("id");
   const [userSearch, setUserSearch] = useState("");
@@ -407,7 +390,10 @@ const CommunityChat = () => {
   const [mesSend, setMesSend] = useState<boolean>(false);
   const topRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
+  const [userPage, setUserPage] = useState(1);
   const [memberLoading, setMemeberLoading] = useState<boolean>(false);
+  const { data, isLoading, error } = useUsers(userPage, userSearch);
+  const userArray: User[] = data?.users || [];
 
   const mapMessage = (msg: any) => ({
     id: msg.id,
@@ -428,6 +414,7 @@ const CommunityChat = () => {
 
   useEffect(() => {
     if (selectedChat?.id === "Select") return;
+    else if (selectedChat.type === "user") return;
     const checkMember = async () => {
       setMemeberLoading(true);
       try {
@@ -535,6 +522,7 @@ const CommunityChat = () => {
   //get initial messages when page reloaded fetch from db
   useEffect(() => {
     if (!selectedChat?.id || selectedChat.id === "Select") return;
+    else if (selectedChat.type === "user") return;
     const loadMessages = async () => {
       setMessages([]); // clear previous chat
       setPage(1);
@@ -623,10 +611,6 @@ const CommunityChat = () => {
     viewport.scrollTop = newScrollHeight - prevScrollHeightRef.current;
   }, [messages, page]);
 
-  const filteredCommunities = communities.filter((c) =>
-    c.name.toLowerCase().includes(communitySearch.toLowerCase())
-  );
-
   const filteredUsers = recentChats.filter((u) =>
     u.name.toLowerCase().includes(userSearch.toLowerCase())
   );
@@ -703,7 +687,7 @@ const CommunityChat = () => {
             setCommunitySearch={setCommunitySearch}
             userSearch={userSearch}
             setUserSearch={setUserSearch}
-            filteredCommunities={filteredCommunities}
+            userArray={userArray}
             filteredUsers={filteredUsers}
             joinedCom={joinedCom}
             allCommunity={allCommunity}
@@ -714,7 +698,7 @@ const CommunityChat = () => {
         {/* Chat Body */}
 
         {memberLoading ? (
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col justify-center">
             {" "}
             <CircularLoader />{" "}
           </div>
@@ -739,7 +723,7 @@ const CommunityChat = () => {
                         setCommunitySearch={setCommunitySearch}
                         userSearch={userSearch}
                         setUserSearch={setUserSearch}
-                        filteredCommunities={filteredCommunities}
+                        userArray={userArray}
                         filteredUsers={filteredUsers}
                         joinedCom={joinedCom}
                         onCreateCommunity={() => setCreateModalOpen(true)}
@@ -823,21 +807,50 @@ const CommunityChat = () => {
                   </div>
                 )}
 
-                {!memberLoading && !isMember && userid && (
-                  <div className="p-4 border-t">
-                    <div className="flex flex-col items-center justify-center gap-3 py-4">
-                      <p className="text-muted-foreground text-sm">
-                        You haven't joined this community
-                      </p>
-                      <Button variant="ocean" onClick={handleJoinCommunity}>
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        Join Community
-                      </Button>
+                {!memberLoading &&
+                  !isMember &&
+                  userid &&
+                  selectedChat.type !== "user" && (
+                    <div className="p-4 border-t">
+                      <div className="flex flex-col items-center justify-center gap-3 py-4">
+                        <p className="text-muted-foreground text-sm">
+                          You haven't joined this community
+                        </p>
+                        <Button variant="ocean" onClick={handleJoinCommunity}>
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Join Community
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {!memberLoading && isMember && userid && (
+                {!memberLoading &&
+                  isMember &&
+                  userid &&
+                  selectedChat.type === "community" && (
+                    <div className="p-4 border-t">
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Type a message..."
+                          value={message}
+                          onChange={(e) => setMessage(e.target.value)}
+                          className="flex-1"
+                          onKeyPress={(e) =>
+                            e.key === "Enter" && setMessage("")
+                          }
+                        />
+                        <Button
+                          variant="ocean"
+                          size="icon"
+                          onClick={sendMessage}
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                {selectedChat.type === "user" && (
                   <div className="p-4 border-t">
                     <div className="flex gap-2">
                       <Input
@@ -872,7 +885,7 @@ const CommunityChat = () => {
                         setCommunitySearch={setCommunitySearch}
                         userSearch={userSearch}
                         setUserSearch={setUserSearch}
-                        filteredCommunities={filteredCommunities}
+                        userArray={userArray}
                         filteredUsers={filteredUsers}
                         joinedCom={joinedCom}
                         onCreateCommunity={() => setCreateModalOpen(true)}
