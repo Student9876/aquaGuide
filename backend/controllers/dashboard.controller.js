@@ -62,16 +62,16 @@ export const getAdminDashboardStats = async (req, res) => {
     const forumByRoleRaw = await CommunityForum.findAll({
       attributes: [
         [fn("COUNT", col("CommunityForum.id")), "count"],
-        [col("creator.role"), "role"],
+        [col("User.role"), "role"],
       ],
       include: [
         {
           model: User,
           attributes: [],
-          as: "creator",
+          as: "User",
         },
       ],
-      group: ["creator.role"],
+      group: ["User.role"],
     });
 
     const forumCounts = { admin: 0, support: 0, user: 0 };
