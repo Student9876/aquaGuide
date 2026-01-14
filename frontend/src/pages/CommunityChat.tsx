@@ -408,126 +408,8 @@ const CommunityChat = () => {
     time: new Date(msg.created_at).toLocaleTimeString(),
   });
 
-  //handle community join , check member or not , and create community
-  const handleJoinCommunity = async () => {
-    try {
-      const res = await communityChatApi.joinCommunity(selectedChat.id);
-
-      setCommunityCreated((prev) => !prev);
-    } catch (error) {}
-  };
-
   useEffect(() => {
-    if (selectedChat?.id === "Select") return;
-    else if (selectedChat.type === "user") return;
-    const checkMember = async () => {
-      setMemeberLoading(true);
-      try {
-        if (!userid) {
-          return;
-        }
-        const res = await communityChatApi.checkMember(selectedChat.id);
-        setIsMember(res?.data?.member || false);
-      } catch (error) {
-      } finally {
-        setMemeberLoading(false);
-      }
-    };
-
-    checkMember();
-  }, [selectedChat, communityCreated]);
-
-  const handleCreateCommunity = async () => {
-    // TODO: Implement actual community creation
-    if (!newCommunityDescription.trim() || !newCommunityName.trim()) {
-      toast.error("Please give description and title");
-    }
-    try {
-      const res = await communityChatApi.create({
-        name: newCommunityName,
-        description: newCommunityDescription,
-        is_private: isPrivate,
-      });
-      toast.success("Community created successfully");
-      setNewCommunityName("");
-      setNewCommunityDescription("");
-      setCreateModalOpen(false);
-      setCommunityCreated((prev) => !prev);
-    } catch (error) {
-      toast.error("Something went wrong creating the community");
-    }
-  };
-
-  //join community and get public community
-  useEffect(() => {
-    const getJoinCommunity = async () => {
-      try {
-        if (!userid) {
-          return;
-        }
-        const res = await communityChatApi.getJoinedCommunity();
-        setJoinedCom(res?.data?.data || []);
-        console.log(res?.data?.data);
-      } catch (error) {}
-    };
-    getJoinCommunity();
-  }, [communityCreated]);
-
-  useEffect(() => {
-    const handleAllPublicCommunity = async () => {
-      try {
-        const res = await communityChatApi.getAllPublicCommunity();
-        setAllCommunity(res?.data?.data);
-        console.log(res?.data?.data);
-      } catch (error) {}
-    };
-    handleAllPublicCommunity();
-  }, [communityCreated]);
-
-  //socket connections for realtime chat
-
-  //socket to join community so users can chat in a same room
-  useEffect(() => {
-    if (selectedChat.type === "user") return;
-    socket.emit("join-community", selectedChat.id);
-  }, [selectedChat.id]);
-
-  /**
-   * Realtime listener (ONLY ONCE) to listen for incoming message
-   */
-  useEffect(() => {
-    const handler = (msg: any) => {
-      setMessages((prev) => [...prev, mapMessage(msg)]);
-      console.log("send message", mapMessage(msg));
-    };
-
-    socket.on("message-received", handler);
-
-    return () => {
-      socket.off("message-received", handler);
-    };
-  }, []);
-
-  // to send message in realtime
-  const sendMessage = () => {
-    socket.emit(
-      "send-message",
-      {
-        communityId: selectedChat.id,
-        message: message,
-      },
-      (response) => {
-        console.log(response);
-        setMessage("");
-      }
-    );
-    setMesSend((prev) => !prev);
-  };
-
-  //get initial messages when page reloaded fetch from db
-  useEffect(() => {
-    if (!selectedChat?.id || selectedChat.id === "Select") return;
-    else if (selectedChat.type === "user") return;
+    if (!selectedChat?.id) return;
     const loadMessages = async () => {
       setMessages([]); // clear previous chat
       setPage(1);
@@ -544,6 +426,41 @@ const CommunityChat = () => {
 
     loadMessages();
   }, [selectedChat]);
+
+  useEffect(() => {
+    socket.emit("join-community", selectedChat.id);
+  }, [selectedChat.id]);
+
+  /**
+   * Realtime listener (ONLY ONCE)
+   */
+  useEffect(() => {
+    const handler = (msg: any) => {
+      setMessages((prev) => [...prev, mapMessage(msg)]);
+      console.log("send message", mapMessage(msg));
+    };
+
+    socket.on("message-received", handler);
+
+    return () => {
+      socket.off("message-received", handler);
+    };
+  }, []);
+
+  const sendMessage = () => {
+    socket.emit(
+      "send-message",
+      {
+        communityId: selectedChat.id,
+        message: message,
+      },
+      (response) => {
+        console.log(response);
+        setMessage("");
+      }
+    );
+    setMesSend((prev) => !prev);
+  };
 
   // Load more messages (pagination)
   const loadMoreMessages = async () => {
@@ -577,7 +494,7 @@ const CommunityChat = () => {
     }
   };
 
-  // IntersectionObserver approach to load message when we are in top
+  // Alternative: IntersectionObserver approach (more reliable)
   useEffect(() => {
     if (!topRef.current || !hasMore || loading) return;
 
@@ -617,10 +534,91 @@ const CommunityChat = () => {
   }, [messages, page]);
 
   useEffect(() => {
-    if (page === 1 && messages.length > 0 && lastMessageRef.current) {
+    const getJoinCommunity = async () => {
+      try {
+        if (!userid) {
+          return;
+        }
+        const res = await communityChatApi.getJoinedCommunity();
+        setJoinedCom(res?.data?.data || []);
+        console.log(res?.data?.data);
+      } catch (error) {}
+    };
+    getJoinCommunity();
+  }, [communityCreated]);
+
+  useEffect(() => {
+    const handleAllPublicCommunity = async () => {
+      try {
+        const res = await communityChatApi.getAllPublicCommunity();
+        setAllCommunity(res?.data?.data);
+        console.log(res?.data?.data);
+      } catch (error) {}
+    };
+    handleAllPublicCommunity();
+  }, [communityCreated]);
+
+  const handleJoinCommunity = async () => {
+    try {
+      const res = await communityChatApi.joinCommunity(selectedChat.id);
+
+      setCommunityCreated((prev) => !prev);
+    } catch (error) {}
+  };
+
+  useEffect(() => {
+    if (selectedChat.id === "Select" || selectedChat.type === "user") return;
+    const checkMember = async () => {
+      setMemeberLoading(true);
+      setLoading(true);
+      try {
+        if (!userid) {
+          return;
+        }
+        const res = await communityChatApi.checkMember(selectedChat.id);
+        setIsMember(res?.data?.member || false);
+      } catch (error) {
+      } finally {
+        setLoading(false);
+        setMemeberLoading(false);
+      }
+    };
+
+    checkMember();
+  }, [selectedChat, communityCreated]);
+
+  const handleCreateCommunity = async () => {
+    // TODO: Implement actual community creation
+    if (!newCommunityDescription.trim() || !newCommunityName.trim()) {
+      toast.error("Please give description and title");
+    }
+    try {
+      const res = await communityChatApi.create({
+        name: newCommunityName,
+        description: newCommunityDescription,
+        is_private: isPrivate,
+      });
+      toast.success("Community created successfully");
+      setNewCommunityName("");
+      setNewCommunityDescription("");
+      setCreateModalOpen(false);
+      setCommunityCreated((prev) => !prev);
+    } catch (error) {
+      toast.error("Something went wrong creating the community");
+    }
+  };
+
+  useEffect(() => {
+    if (page <= 2 && messages.length > 0 && lastMessageRef.current) {
       lastMessageRef.current.scrollIntoView({ behavior: "auto", block: "end" });
     }
-  }, [messages, page, mesSend]);
+  }, [messages, mesSend]);
+
+  useEffect(() => {
+    if (messages.length > 0 && lastMessageRef.current) {
+      lastMessageRef.current.scrollIntoView({ behavior: "auto", block: "end" });
+    }
+  }, [mesSend]);
   return (
     <>
       <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
