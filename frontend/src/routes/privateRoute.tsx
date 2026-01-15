@@ -2,22 +2,21 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "../store/store";
 import { logout } from "@/store/userSlice";
+import { useMemo } from "react";
 
 const PrivateRoute = () => {
   const user = useSelector((state: RootState) => state.user);
   const { accessToken, tokenExpiry } = user;
-   const dispatch = useDispatch();
-  
+  const dispatch = useDispatch();
 
- const isTokenValid = () => {
+  const isTokenValid = useMemo(() => {
     if (!accessToken || !tokenExpiry) {
-      dispatch(logout())
-      return false
-    };
+      dispatch(logout());
+      return false;
+    }
 
-    
     const now = Date.now();
-    const expiry = Number(tokenExpiry); 
+    const expiry = Number(tokenExpiry);
     const timeLeftMs = expiry - now;
     const timeLeftMinutes = Math.floor(timeLeftMs / (1000 * 60));
 
@@ -30,9 +29,9 @@ const PrivateRoute = () => {
     }
 
     return true;
-  };
+  }, [accessToken, tokenExpiry, dispatch]);
 
-  return isTokenValid() ? <Outlet /> : <Navigate to="/login" replace />;
+  return isTokenValid ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
 export default PrivateRoute;
