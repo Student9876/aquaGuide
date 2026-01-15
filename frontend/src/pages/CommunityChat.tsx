@@ -409,7 +409,7 @@ const CommunityChat = () => {
   });
 
   useEffect(() => {
-    if (!selectedChat?.id) return;
+    if (!selectedChat?.id || selectedChat.id === "Select") return;
     const loadMessages = async () => {
       setMessages([]); // clear previous chat
       setPage(1);
