@@ -833,7 +833,7 @@ const CommunityChat = () => {
                           onChange={(e) => setMessage(e.target.value)}
                           className="flex-1"
                           onKeyPress={(e) =>
-                            e.key === "Enter" && setMessage("")
+                            e.key === "Enter" && sendMessage()
                           }
                         />
                         <Button
