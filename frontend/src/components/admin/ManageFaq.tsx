@@ -128,13 +128,13 @@ const ManageFaq = () => {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-        Manage Text Guides
+        Manage Faq
       </h1>
 
       {/* Create Guide Form */}
       <Card className="border-border bg-card">
         <CardHeader>
-          <CardTitle className="text-lg">Create New Guide</CardTitle>
+          <CardTitle className="text-lg">Create New Faq</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
