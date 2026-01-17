@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useRef, useState, useLayoutEffect} from "react";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {ScrollArea} from "@/components/ui/scroll-area";
@@ -539,34 +539,60 @@ const CommunityChat = () => {
 		setMesSend((prev) => !prev);
 	};
 
+	// Track if the update was caused by loading history specifically
+	const isLoadingHistoryRef = useRef(false);
+
 	// Load more messages (pagination)
 	const loadMoreMessages = async () => {
+		// Stop if already loading or no more data
 		if (!hasMore || loading) return;
 
-		const viewport = document.querySelector("[data-radix-scroll-area-viewport]") as HTMLElement;
+		const viewport = scrollRef.current?.closest("[data-radix-scroll-area-viewport]") as HTMLElement;
 		if (!viewport) return;
 
 		setLoading(true);
+		isLoadingHistoryRef.current = true;
 		prevScrollHeightRef.current = viewport.scrollHeight;
 
 		const nextPage = page + 1;
 
 		try {
+			let response;
+			// 1. Determine which API to call
 			if (selectedChat.type === "community") {
-				const res = await communityChatApi.getCommunityMessages(selectedChat.id, nextPage);
-				const newMessages = res.data.data.map(mapMessage);
-				setMessages((prev) => [...newMessages, ...prev]);
+				response = await communityChatApi.getCommunityMessages(selectedChat.id, nextPage);
+			} else if (selectedChat.type === "user" && selectedChat.id !== "Select") {
+				// Use selectedChat.id to ensure we have the correct ID
+				response = await privateChatApi.getMessages(selectedChat.id, nextPage);
+			}
+
+			// 2. Process the response safely
+			if (response?.data?.data) {
+				const incomingMessages = response.data.data.map(mapMessage);
+
+				// CRITICAL FIX: Filter out duplicates.
+				// If the API returns messages we already have, the UI won't grow, causing a loop.
+				setMessages((prev) => {
+					const existingIds = new Set(prev.map((m) => m.id));
+					const uniqueMessages = incomingMessages.filter((m: any) => !existingIds.has(m.id));
+
+					// If no new unique messages, stop pagination to prevent loops
+					if (uniqueMessages.length === 0) {
+						setHasMore(false);
+						return prev;
+					}
+
+					return [...uniqueMessages, ...prev];
+				});
+
 				setPage(nextPage);
-				setHasMore(res.data.pagination.hasNextPage);
-			} else if (selectedChat.type === "user" && currentConversationId) {
-				const res = await privateChatApi.getMessages(currentConversationId, nextPage);
-				const newMessages = res.data.data.map(mapMessage);
-				setMessages((prev) => [...newMessages, ...prev]);
-				setPage(nextPage);
-				setHasMore(res.data.pagination.hasNextPage);
+				setHasMore(response.data.pagination?.hasNextPage ?? false);
+			} else {
+				setHasMore(false);
 			}
 		} catch (error) {
 			console.error("Error loading messages:", error);
+			setHasMore(false); // Stop trying on error
 		} finally {
 			setLoading(false);
 		}
@@ -596,12 +622,31 @@ const CommunityChat = () => {
 	}, [hasMore, loading, page, selectedChat?.id]);
 
 	// Restore scroll position after loading more messages
-	useEffect(() => {
-		const viewport = document.querySelector("[data-radix-scroll-area-viewport]") as HTMLElement;
-		if (!viewport || page === 1) return;
+	// useEffect(() => {
+	// 	const viewport = document.querySelector("[data-radix-scroll-area-viewport]") as HTMLElement;
+	// 	if (!viewport || page === 1) return;
+
+	// 	const newScrollHeight = viewport.scrollHeight;
+	// 	viewport.scrollTop = newScrollHeight - prevScrollHeightRef.current;
+	// }, [messages, page]);
+
+	// Fixed Scroll Restoration (For infinite scroll)
+	// useLayoutEffect fires before the paint, preventing a visual "jump"
+	useLayoutEffect(() => {
+		const viewport = scrollRef.current?.closest("[data-radix-scroll-area-viewport]") as HTMLElement;
+
+		// Only run this logic if we are on page > 1 (loading history)
+		if (!viewport || page === 1 || !isLoadingHistoryRef.current) return;
 
 		const newScrollHeight = viewport.scrollHeight;
-		viewport.scrollTop = newScrollHeight - prevScrollHeightRef.current;
+		const scrollDiff = newScrollHeight - prevScrollHeightRef.current;
+
+		// Only jump if the height actually changed (data rendered)
+		if (scrollDiff > 0) {
+			viewport.scrollTop = scrollDiff;
+		}
+
+		isLoadingHistoryRef.current = false;
 	}, [messages, page]);
 
 	useEffect(() => {
@@ -672,17 +717,13 @@ const CommunityChat = () => {
 		}
 	};
 
+	// Fixed Scroll to Bottom (For new messages/initial load)
 	useEffect(() => {
-		if (page <= 2 && messages.length > 0 && lastMessageRef.current) {
+		if (page === 1 && messages.length > 0 && lastMessageRef.current) {
 			lastMessageRef.current.scrollIntoView({behavior: "auto", block: "end"});
 		}
-	}, [messages, mesSend]);
+	}, [messages, mesSend, page]);
 
-	useEffect(() => {
-		if (messages.length > 0 && lastMessageRef.current) {
-			lastMessageRef.current.scrollIntoView({behavior: "auto", block: "end"});
-		}
-	}, [mesSend]);
 	return (
 		<>
 			<Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
