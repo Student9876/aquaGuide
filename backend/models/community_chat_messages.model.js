@@ -1,4 +1,4 @@
-// models/community_message.model.js
+
 /**
  * Community Message Model
  * Represents individual messages sent by users within a community chat.
